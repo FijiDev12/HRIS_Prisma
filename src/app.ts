@@ -12,6 +12,7 @@ import roleRoutes from './routes/role.route';
 import restdayRoutes from './routes/restday.route';
 import userRoutes from './routes/user.route';
 import obRoutes from './routes/ob.route';
+import otRoutes from './routes/ot.route';
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/v1/role", roleRoutes);
 app.use("/api/v1/restday", restdayRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/request/ob", obRoutes);
+app.use("/api/v1/request/ot", otRoutes);
 
 setupSwagger(app);
 

@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
 import { 
-    approveObRequestService,
-    createObReqService, 
-    getObRequestByEmpIdService, 
-    getObRequestService, 
-    rejectObRequestService 
-} from "../services/ob.services";
+    approveOtRequestService,
+    createOtReqService,
+    getOtRequestByEmpIdService, 
+    getOtRequestService, 
+    rejectOtRequestService
+} from "../services/ot.services";
 
-export const getObRequestController = async (_:Request, res: Response) => {
+export const getOtRequestController = async (_:Request, res: Response) => {
     try {
-        const result = await getObRequestService();
+        const result = await getOtRequestService();
         res.status(200).json({
             code: 200,
             message: 'Success',
@@ -23,7 +23,7 @@ export const getObRequestController = async (_:Request, res: Response) => {
     }
 }
 
-export const getObRequestByIdController = async (req: Request, res: Response) => {
+export const getOtRequestByIdController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     if(!id || isNaN(id)) {
         return res.status(400).json({
@@ -33,7 +33,7 @@ export const getObRequestByIdController = async (req: Request, res: Response) =>
     }
     
     try {
-        const result = await getObRequestByEmpIdService(Number(id));
+        const result = await getOtRequestByEmpIdService(Number(id));
         res.status(200).json({
             code: 200,
             message: 'Success',
@@ -47,9 +47,9 @@ export const getObRequestByIdController = async (req: Request, res: Response) =>
     }
 }
 
-export const createObRequestController = async (req: Request, res: Response) => {
-    const { employeeId, workDate, startTime, endTime, purpose } = await req.body;
-    if(!employeeId || !workDate || !startTime || !endTime || !purpose) {
+export const createOtRequestController = async (req: Request, res: Response) => {
+    const { employeeId, workDate, startTime, endTime, totalMinutes, reason, createdBy } = await req.body;
+    if(!employeeId || !workDate || !startTime || !endTime || !totalMinutes || !reason || !createdBy) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -57,7 +57,7 @@ export const createObRequestController = async (req: Request, res: Response) => 
     }
 
     try {
-        const result = await createObReqService(req.body);
+        const result = await createOtReqService(req.body);
         res.status(200).json({
             code: 200,
             message: 'Success',
@@ -71,7 +71,7 @@ export const createObRequestController = async (req: Request, res: Response) => 
     }
 }
 
-export const approveObRequestController = async (req: Request, res: Response) => {
+export const approveOtRequestController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     if(!id || isNaN(id)) {
         return res.status(400).json({
@@ -89,7 +89,7 @@ export const approveObRequestController = async (req: Request, res: Response) =>
     }
 
     try {
-        const result = await approveObRequestService(Number(id), req.body);
+        const result = await approveOtRequestService(Number(id), req.body);
         res.status(200).json({
             code: 200,
             message: 'Success',
@@ -103,7 +103,7 @@ export const approveObRequestController = async (req: Request, res: Response) =>
     }
 }
 
-export const rejectObRequestController = async (req: Request, res: Response) => {
+export const rejectOtRequestController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     if(!id || isNaN(id)) {
         return res.status(400).json({
@@ -121,7 +121,7 @@ export const rejectObRequestController = async (req: Request, res: Response) => 
     }
 
     try {
-        const result = await rejectObRequestService(Number(id), req.body);
+        const result = await rejectOtRequestService(Number(id), req.body);
         res.status(200).json({
             code: 200,
             message: 'Success',
