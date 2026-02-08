@@ -8,7 +8,7 @@ interface UserType {
     employeeId?: number;
 }
 
-export async function createSiteService(data: UserType) {
+export async function createUserService(data: UserType) {
     const result = await prisma.user.create({ data });
 
     return result;

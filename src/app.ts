@@ -10,6 +10,7 @@ import timeLogRoutes from './routes/timelogs.route';
 import positionRoutes from './routes/position.route';
 import roleRoutes from './routes/role.route';
 import restdayRoutes from './routes/restday.route';
+import userRoutes from './routes/user.route';
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/v1/time", timeLogRoutes);
 app.use("/api/v1/position", positionRoutes);
 app.use("/api/v1/role", roleRoutes);
 app.use("/api/v1/restday", restdayRoutes);
+app.use("/api/v1/users", userRoutes);
 
 setupSwagger(app);
 
