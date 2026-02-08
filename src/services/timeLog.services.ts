@@ -1,0 +1,139 @@
+import { prisma } from "../util/prisma.util";
+
+export async function createTimeLog(employeeNo: number) {
+    const now = new Date();
+
+    const employee: any = await prisma.employee.findUnique({
+        where: { employeeNo, deletedAt: null }
+    });
+    console.log(employee)
+
+    if (!employee) throw new Error("Employee not found");
+    const { id } = employee;
+    
+    const employeeShift = await prisma.employeeShift.findFirst({
+        where: { employeeId: id },
+        include: { shift: true }
+    });
+    console.log(employeeShift)
+
+    if (!employeeShift) throw new Error("Shift not assigned for this employee");
+    const { shift } = employeeShift;
+
+    let logDate = now.toISOString().split("T")[0];
+
+    if (shift.endTime && shift.startTime && shift.endTime < shift.startTime) {
+        const [endHour, endMin] = shift.endTime.split(":").map(Number);
+        if (now.getHours() < endHour || (now.getHours() === endHour && now.getMinutes() <= endMin)) {
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            logDate = yesterday.toISOString().split("T")[0];
+        }
+    }
+
+    let dtr = await prisma.dTR.findUnique({
+        where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
+    });
+
+    let logType: "IN" | "OUT" = "IN";
+    if (dtr) {
+        if (!dtr.timeIn) logType = "IN";
+        else if (!dtr.timeOut) logType = "OUT";
+        else throw new Error("Already clocked IN and OUT for today");
+    }
+
+    const timeLog = await prisma.timeLog.create({
+        data: { employeeId: id, type: logType, loggedAt: now, logDate },
+    });
+
+    dtr = await prisma.dTR.upsert({
+        where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
+        update: {
+            timeIn: logType === "IN" ? now : dtr?.timeIn,
+            timeOut: logType === "OUT" ? now : dtr?.timeOut,
+        },
+        create: {
+            employeeId: id,
+            workDate: logDate,
+            timeIn: logType === "IN" ? now : undefined,
+            timeOut: logType === "OUT" ? now : undefined,
+            status: "PENDING",
+        },
+    });
+
+    const [leave, ob, restDay, holiday] = await Promise.all([
+        prisma.leaveRequest.findFirst({
+            where: {
+                employeeId: id,
+                status: "APPROVED",
+                fromDate: { lte: logDate },
+                toDate: { gte: logDate },
+            },
+        }),
+        prisma.officialBusiness.findFirst({
+            where: {
+                employeeId: id,
+                status: "APPROVED",
+                workDate: logDate,
+            },
+        }),
+        prisma.restDay.findFirst({
+            where: { employeeId: id, dayOfWeek: new Date(logDate).getDay() },
+        }),
+        prisma.holidayType.findFirst({
+            where: { holidayDate: new Date(logDate), deletedAt: null },
+        }),
+    ]);
+
+    if (leave) {
+        await prisma.dTR.update({
+            where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
+            data: { status: "LEAVE", timeIn: null, timeOut: null, lateMinutes: 0, undertimeMinutes: 0, overtimeMinutes: 0 },
+        });
+        return timeLog;
+    }
+
+    if (ob) {
+        await prisma.dTR.update({
+            where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
+            data: { status: "OB", lateMinutes: 0, undertimeMinutes: 0 },
+        });
+        return timeLog;
+    }
+
+    if (restDay) {
+        await prisma.dTR.update({
+            where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
+            data: { status: "RESTDAY", lateMinutes: 0, undertimeMinutes: 0 },
+        });
+        return timeLog;
+    }
+
+    if (holiday) {
+        await prisma.dTR.update({
+            where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
+            data: { status: "HOLIDAY", lateMinutes: 0, undertimeMinutes: 0 },
+        });
+        return timeLog;
+    }
+
+    if (shift.startTime && shift.endTime && logType === "OUT") {
+        const shiftStart = new Date(`${logDate}T${shift.startTime}:00`);
+        let shiftEnd = new Date(`${logDate}T${shift.endTime}:00`);
+        if (shiftEnd < shiftStart) shiftEnd.setDate(shiftEnd.getDate() + 1);
+
+        const timeIn = dtr.timeIn || shiftStart;
+        const timeOut = dtr.timeOut || shiftEnd;
+
+        const lateMinutes = Math.max(0, Math.floor((timeIn.getTime() - shiftStart.getTime()) / 60000) - shift.graceMinutes);
+        const undertimeMinutes = Math.max(0, Math.floor((shiftEnd.getTime() - timeOut.getTime()) / 60000));
+        const overtimeMinutes = Math.max(0, Math.floor((timeOut.getTime() - shiftEnd.getTime()) / 60000));
+
+        await prisma.dTR.update({
+            where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
+            data: { lateMinutes, undertimeMinutes, overtimeMinutes, status: "PRESENT" },
+        });
+    }
+
+    return timeLog;
+}
