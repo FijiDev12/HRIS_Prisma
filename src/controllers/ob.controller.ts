@@ -1,15 +1,10 @@
 import { Request, Response } from "express";
-import { 
-    createUserService, 
-    deleteUserService, 
-    getUserByIdService, 
-    getUsersService, 
-    updateUserService 
-} from "../services/user.services";
+import { createObReqService, getObRequestByEmpIdService, getObRequestService, rejectObRequestService } from "../services/ob.services";
+import { approveLeaveRequestService } from "../services/leave.services";
 
-export const getUsersController = async (_:Request, res: Response) => {
+export const getObRequestController = async (_:Request, res: Response) => {
     try {
-        const result = await getUsersService();
+        const result = await getObRequestService();
         res.status(200).json({
             code: 200,
             message: 'Success',
@@ -23,7 +18,7 @@ export const getUsersController = async (_:Request, res: Response) => {
     }
 }
 
-export const getUserByIdController = async (req: Request, res: Response) => {
+export const getObRequestByIdController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     if(!id || isNaN(id)) {
         return res.status(400).json({
@@ -33,7 +28,7 @@ export const getUserByIdController = async (req: Request, res: Response) => {
     }
     
     try {
-        const result = await getUserByIdService(Number(id));
+        const result = await getObRequestByEmpIdService(Number(id));
         res.status(200).json({
             code: 200,
             message: 'Success',
@@ -47,9 +42,9 @@ export const getUserByIdController = async (req: Request, res: Response) => {
     }
 }
 
-export const createUserController = async (req: Request, res: Response) => {
-    const { email, password, roleId } = await req.body;
-    if(!email || !password || !roleId) {
+export const createObRequestController = async (req: Request, res: Response) => {
+    const { employeeId, workDate, startTime, endTime, purpose } = await req.body;
+    if(!employeeId || !workDate || !startTime || !endTime || !purpose) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -57,7 +52,7 @@ export const createUserController = async (req: Request, res: Response) => {
     }
 
     try {
-        const result = await createUserService(req.body);
+        const result = await createObReqService(req.body);
         res.status(200).json({
             code: 200,
             message: 'Success',
@@ -71,7 +66,7 @@ export const createUserController = async (req: Request, res: Response) => {
     }
 }
 
-export const updateUserController = async (req: Request, res: Response) => {
+export const approveObRequestController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     if(!id || isNaN(id)) {
         return res.status(400).json({
@@ -80,8 +75,8 @@ export const updateUserController = async (req: Request, res: Response) => {
         });
     }
 
-    const { email, password, roleId } = await req.body;
-    if(!email || !password || !roleId) {
+    const { approverId, remarks } = await req.body;
+    if(!approverId || !remarks) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -89,7 +84,7 @@ export const updateUserController = async (req: Request, res: Response) => {
     }
 
     try {
-        const result = await updateUserService(Number(id), req.body);
+        const result = await approveLeaveRequestService(Number(id), req.body);
         res.status(200).json({
             code: 200,
             message: 'Success',
@@ -103,7 +98,7 @@ export const updateUserController = async (req: Request, res: Response) => {
     }
 }
 
-export const deleteUserController = async (req: Request, res: Response) => {
+export const rejectObRequestController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     if(!id || isNaN(id)) {
         return res.status(400).json({
@@ -112,11 +107,20 @@ export const deleteUserController = async (req: Request, res: Response) => {
         });
     }
 
+    const { approverId, remarks } = await req.body;
+    if(!approverId || !remarks) {
+        return res.status(400).json({
+            code: 400,
+            message: 'Bad Request'
+        });
+    }
+
     try {
-        await deleteUserService(Number(id));
+        const result = await rejectObRequestService(Number(id), req.body);
         res.status(200).json({
             code: 200,
-            message: 'Success'
+            message: 'Success',
+            data: result
         });
     } catch (error: any) {
         res.status(500).json({

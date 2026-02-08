@@ -11,7 +11,7 @@ interface OBRequestType {
 
 interface OBApproveType {
     approverId: number;
-    remark?: string;
+    remarks?: string;
 }
 
 export async function createObReqService(data: OBRequestType) {
