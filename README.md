@@ -22,24 +22,20 @@ Make sure you have the following installed:
 ---
 
 ## 🚀 Getting Started
-
-### 1. Clone the repository
 ```bash
+### 1. Clone the repository
 git clone <your-repo-url>
 cd <project-folder>
 
 ### 2. Install dependencies
-```bash
 npm install
 
 ### 3. Setup Prisma
-```bash
 npm run prisma:generate
 npm run prisma:migrate
 npm run prisma:seed
 
 ### 4. Install/Run the application (Redis)
-```bash
 For Window:
 1. Download Memurai
 Go to:
@@ -61,5 +57,4 @@ redis-cli ping
 brew services stop redis
 
 ### 5. Run the application (Development)
-```bash
 npm run dev
