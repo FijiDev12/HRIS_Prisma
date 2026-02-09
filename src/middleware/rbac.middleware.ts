@@ -3,8 +3,6 @@ import { AuthRequest } from './auth.middleware';
 
 export function rbacMiddleware(roles: string[]) {
     return (req: AuthRequest, res: Response, next: NextFunction) => {
-        console.log(roles)
-        console.log(req.user)
         if (!req.user) return res.status(404).json({
             code: 404,
             message: 'User not found'

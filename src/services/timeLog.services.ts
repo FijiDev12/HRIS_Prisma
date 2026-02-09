@@ -37,13 +37,20 @@ export async function createTimeLog(employeeNo: number) {
 
     let logType: "IN" | "OUT" = "IN";
     if (dtr) {
-        if (!dtr.timeIn) logType = "IN";
-        else if (!dtr.timeOut) logType = "OUT";
-        else throw new Error("Already clocked IN and OUT for today");
+        if (!dtr.timeIn) {
+            logType = "IN";
+        }
+        else if (!dtr.timeOut) {
+            logType = "OUT";
+        }
+        else {
+            return null;
+            // throw new Error("Already clocked IN and OUT for today");
+        }
     }
 
     const timeLog = await prisma.timeLog.create({
-        data: { employeeId: id, type: logType, loggedAt: now, logDate },
+        data: { employeeId: id, type: logType, logDate },
     });
 
     dtr = await prisma.dTR.upsert({

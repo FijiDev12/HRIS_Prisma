@@ -9,6 +9,7 @@ import {
     deleteEmploymentStatusController, 
     getEmployeeByIdController, 
     getEmployeesController, 
+    getEmployeeShiftByEmpIdController, 
     getEmployeeShiftsController, 
     getEmploymentStatusByIdController, 
     getEmploymentStatusController, 
@@ -27,7 +28,8 @@ router.patch("/:id", rbacMiddleware(["ADMIN"]), updateEmployeeController);
 router.delete("/:id", rbacMiddleware(["ADMIN"]), deleteEmployeeController);
 
 router.post("/assign/schedule", rbacMiddleware(["ADMIN"]), assignShiftToEmployeeCont);
-router.get("/schedule", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmployeeShiftsController);
+router.get("/assign/schedule", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmployeeShiftsController);
+router.get("/assign/schedule/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmployeeShiftByEmpIdController);
 
 router.get("/status", rbacMiddleware(["ADMIN"]), getEmploymentStatusController);
 router.get("/status/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmploymentStatusByIdController);

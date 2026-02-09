@@ -10,6 +10,8 @@ export interface AuthRequest extends Request {
 }
 
 export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (req.path === "/timelogs") return next();
+
     try {
         const authHeader = req.headers.authorization
         if (!authHeader) return res.status(401).json({

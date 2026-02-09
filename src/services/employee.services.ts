@@ -188,7 +188,17 @@ export async function assignShiftToEmployee(data: any) {
 
 export async function getEmployeeShifts() {
     const result = await prisma.employeeShift.findMany({
-        include: { employee: true, shift: true }
+        include: { shift: true }
+        // include: { employee: true, shift: true }
+    });
+
+    return result;
+}
+
+export async function getEmployeeShiftByEmpId(id: number) {
+    const result = await prisma.employeeShift.findMany({
+        where: { employeeId: id },
+        include: { shift: true }
     });
 
     return result;

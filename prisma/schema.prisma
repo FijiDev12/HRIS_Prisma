@@ -139,7 +139,7 @@ model Employee {
   site  Site  @relation(fields: [siteId], references: [id])
   employment EmploymentType  @relation(fields: [employmentId], references: [id])
   user  User? @relation(fields: [userId], references: [id])
-  shifts  EmployeeShift[]
+  // shifts  EmployeeShift[]
   timelogs  TimeLog[]
   dtrs  DTR[]
   restDays  RestDay[]
@@ -187,7 +187,7 @@ model EmployeeShift {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  employee Employee @relation(fields: [employeeId], references: [id])
+  // employee Employee @relation(fields: [employeeId], references: [id])
   shift Shift @relation(fields: [shiftId], references: [id])
 
   @@unique([employeeId, workDate])
@@ -202,7 +202,7 @@ model TimeLog {
   id  Int @id @default(autoincrement())
   employeeId Int
   type  LogType
-  loggedAt  DateTime
+  loggedAt  DateTime @default(now())
   logDate String
 
   employee Employee @relation(fields: [employeeId], references: [id])

@@ -6,6 +6,7 @@ import {
     deleteEmployeeService, 
     deleteEmploymentStatusService, 
     getEmployeeByIdService, 
+    getEmployeeShiftByEmpId, 
     getEmployeeShifts, 
     getEmployeesService, 
     getEmploymentStatusByIdService, 
@@ -222,6 +223,29 @@ export const assignShiftToEmployeeCont = async (req: Request, res: Response) => 
 export const getEmployeeShiftsController = async (_:Request, res: Response) => {
     try {
         const result = await getEmployeeShifts();
+        res.status(200).json({
+            code: 200,
+            message: 'Success',
+            data: result
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            code: 500,
+            message: error.message || 'Internal Server Error'
+        });
+    }
+}
+
+export const getEmployeeShiftByEmpIdController = async (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+    if(!id || isNaN(id)) {
+        return res.status(400).json({
+            code: 400,
+            message: 'Bad Request'
+        });
+    }
+    try {
+        const result = await getEmployeeShiftByEmpId(Number(id));
         res.status(200).json({
             code: 200,
             message: 'Success',

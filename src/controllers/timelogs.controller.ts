@@ -11,7 +11,7 @@ export const createTimeLogController = async (req: Request, res: Response) => {
     }
     
     try {
-        const result = await createTimeLog(req.body);
+        const result = await createTimeLog(Number(employeeNo));
         res.status(201).json({
             code: 201,
             message: 'Success',
