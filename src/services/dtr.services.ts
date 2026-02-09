@@ -106,14 +106,14 @@ export async function getDTRDateRange(filter: GettDTRFilter) {
             let lateMinutes = dtr.lateMinutes;
             let undertimeMinutes = dtr.undertimeMinutes;
             let overtimeMinutes = dtr.overtimeMinutes;
-            let status = "PRESENT";
+            let status = "PENDING";
 
             if (leave) status = "LEAVE";
             else if (ob) status = "OB";
             else if (isRestDay) status = "RESTDAY";
             else if (holiday) status = holiday.type;
 
-            if (shift && dtr.timeIn && dtr.timeOut && status === "PRESENT") {
+            if (shift && dtr.timeIn && dtr.timeOut) {
                 const shiftStart = new Date(`${workDate}T${shift.startTime}:00`);
                 let shiftEnd = new Date(`${workDate}T${shift.endTime}:00`);
                 if (shiftEnd < shiftStart) shiftEnd.setDate(shiftEnd.getDate() + 1);
@@ -121,6 +121,7 @@ export async function getDTRDateRange(filter: GettDTRFilter) {
                 lateMinutes = Math.max(0, Math.floor((dtr.timeIn.getTime() - shiftStart.getTime()) / 60000) - shift.graceMinutes);
                 undertimeMinutes = Math.max(0, Math.floor((shiftEnd.getTime() - dtr.timeOut.getTime()) / 60000));
                 overtimeMinutes = Math.max(0, Math.floor((dtr.timeOut.getTime() - shiftEnd.getTime()) / 60000));
+                status = "PRESENT"
             }
 
             result.push({
