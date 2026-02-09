@@ -202,7 +202,7 @@ model TimeLog {
   id  Int @id @default(autoincrement())
   employeeId Int
   type  LogType
-  loggedAt  DateTime @default(now())
+  loggedAt  DateTime
   logDate String
 
   employee Employee @relation(fields: [employeeId], references: [id])
