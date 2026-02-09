@@ -56,8 +56,8 @@ export const createEmployeeController = async (req: Request, res: Response) => {
 
     try {
         const result = await createEmployeeService(req.body);
-        res.status(200).json({
-            code: 200,
+        res.status(201).json({
+            code: 201,
             message: 'Success',
             data: result
         });
@@ -196,8 +196,8 @@ export const deleteEmployeeController = async (req: Request, res: Response) => {
 }
 
 export const assignShiftToEmployeeCont = async (req: Request, res: Response) => {
-    const { employeeId, shiftId } = await req.body;
-    if(!employeeId || !shiftId) {
+    const { employeeId, shiftId, startDate, endDate } = await req.body;
+    if(!employeeId || !shiftId || !startDate || !endDate) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -206,8 +206,8 @@ export const assignShiftToEmployeeCont = async (req: Request, res: Response) => 
 
     try {
         const result = await assignShiftToEmployee(req.body);
-        res.status(200).json({
-            code: 200,
+        res.status(201).json({
+            code: 201,
             message: 'Success',
             data: result
         });
@@ -247,8 +247,8 @@ export const createEmploymentStatusController = async (req: Request, res: Respon
 
     try {
         const result = await createEmploymentStatusService(req.body);
-        res.status(200).json({
-            code: 200,
+        res.status(201).json({
+            code: 201,
             message: 'Success',
             data: result
         });

@@ -34,7 +34,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
 
         const user = await prisma.user.findUnique({
             where: { id: decoded.id },
-            // include: { role: true },
+            include: { role: true },
         })
 
         if (!user) return res.status(401).json({

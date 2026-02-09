@@ -17,6 +17,7 @@ import obRoutes from './routes/ob.route';
 import otRoutes from './routes/ot.route';
 import scheduleRoutes from './routes/shiftSched.route';
 import authRoutes from './routes/auth.route';
+import leaveRoutes from './routes/leave.route';
 
 const swaggerFile = path.join(__dirname, "../docs/swagger.json");
 const swaggerData = JSON.parse(fs.readFileSync(swaggerFile, "utf-8"));
@@ -49,5 +50,6 @@ app.use("/api/v1/request/ob", obRoutes);
 app.use("/api/v1/request/ot", otRoutes);
 app.use("/api/v1/schedule", scheduleRoutes);
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/leave", leaveRoutes);
 
 export default app;

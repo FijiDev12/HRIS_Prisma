@@ -13,10 +13,10 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/", rbacMiddleware(["Admin"]), getShiftsController);
-router.get("/:id", rbacMiddleware(["Admin", "Employee"]), getShiftByIdController);
-router.post("/", rbacMiddleware(["Admin"]), createShiftController);
-router.patch("/:id", rbacMiddleware(["Admin"]), updateShiftController);
-router.delete("/:id", rbacMiddleware(["Admin"]), deleteShiftController);
+router.get("/", rbacMiddleware(["ADMIN"]), getShiftsController);
+router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getShiftByIdController);
+router.post("/", rbacMiddleware(["ADMIN"]), createShiftController);
+router.patch("/:id", rbacMiddleware(["ADMIN"]), updateShiftController);
+router.delete("/:id", rbacMiddleware(["ADMIN"]), deleteShiftController);
 
 export default router;

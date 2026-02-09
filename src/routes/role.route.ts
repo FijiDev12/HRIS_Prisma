@@ -13,10 +13,10 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/", rbacMiddleware(["Admin"]), getRolesController);
-router.get("/:id", rbacMiddleware(["Admin", "Employee"]), getRoleByIdController);
-router.post("/", rbacMiddleware(["Admin"]), createRoleController);
-router.patch("/:id", rbacMiddleware(["Admin"]), updateRoleController);
-router.delete("/:id", rbacMiddleware(["Admin"]), deleteRoleController);
+router.get("/", rbacMiddleware(["ADMIN"]), getRolesController);
+router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getRoleByIdController);
+router.post("/", rbacMiddleware(["ADMIN"]), createRoleController);
+router.patch("/:id", rbacMiddleware(["ADMIN"]), updateRoleController);
+router.delete("/:id", rbacMiddleware(["ADMIN"]), deleteRoleController);
 
 export default router;

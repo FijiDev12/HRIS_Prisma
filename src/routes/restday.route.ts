@@ -13,10 +13,10 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/", rbacMiddleware(["Admin", "Employee"]), getRestdayController);
-router.get("/:id", rbacMiddleware(["Admin", "Employee"]), getRestdayByIdController);
-router.post("/", rbacMiddleware(["Admin"]), createRestdayController);
-router.patch("/:id", rbacMiddleware(["Admin"]), updateRestdayController);
-router.delete("/:id", rbacMiddleware(["Admin"]), deleteRestdayController);
+router.get("/", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getRestdayController);
+router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getRestdayByIdController);
+router.post("/", rbacMiddleware(["ADMIN"]), createRestdayController);
+router.patch("/:id", rbacMiddleware(["ADMIN"]), updateRestdayController);
+router.delete("/:id", rbacMiddleware(["ADMIN"]), deleteRestdayController);
 
 export default router;

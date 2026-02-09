@@ -3,6 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
 import pg from "pg";
 import "dotenv/config";
+import { addDays } from 'date-fns';
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -107,11 +108,21 @@ async function main() {
         }
     });
 
-    await prisma.employeeShift.create({
-        data: {
+    const startDate = new Date('2026-02-01');
+    const endDate = new Date('2026-02-05');
+    const schedules = [];
+
+    for (let d = startDate; d <= endDate; d = addDays(d, 1)) {
+        schedules.push({
             employeeId: employee.id,
-            shiftId: shift.id
-        }
+            shiftId: shift.id,
+            workDate: new Date(d)
+        });
+    }
+
+    await prisma.employeeShift.createMany({
+        data: schedules,
+        skipDuplicates: true
     });
 
     console.log("✅ Seed completed successfully!");

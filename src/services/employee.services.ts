@@ -1,4 +1,5 @@
 import { prisma } from "../util/prisma.util";
+import { addDays } from 'date-fns';
 
 interface EmploymentType {
     employmentType: string;
@@ -162,11 +163,24 @@ export async function deleteEmployeeService(id: number) {
 }
 
 export async function assignShiftToEmployee(data: any) {
-    const result = await prisma.employeeShift.create({
-        data: {
+    const start = new Date(data.startDate);
+    const end = new Date(data.endDate);
+
+    if (start > end) {
+        throw new Error('Start date must be before or equal to end date');
+    }
+
+    const schedules = [];
+    for (let d = start; d <= end; d = addDays(d, 1)) {
+        schedules.push({
             employeeId: data.employeeId,
-            shiftId: data.shiftId
-        }
+            shiftId: data.shiftId,
+            workDate: new Date(d)
+        });
+    }
+    const result = await prisma.employeeShift.createMany({
+        data: schedules,
+        skipDuplicates: true
     });
 
     return result;

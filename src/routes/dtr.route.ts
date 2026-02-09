@@ -7,6 +7,6 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/", rbacMiddleware(["Admin", "Employee"]), getDTRDateRangeController);
+router.get("/", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getDTRDateRangeController);
 
 export default router;

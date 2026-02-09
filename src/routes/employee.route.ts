@@ -20,19 +20,19 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/", rbacMiddleware(["Admin"]), getEmployeesController);
-router.get("/:id", rbacMiddleware(["Admin", "Employee"]), getEmployeeByIdController);
-router.post("/", rbacMiddleware(["Admin"]), createEmployeeController);
-router.patch("/:id", rbacMiddleware(["Admin"]), updateEmployeeController);
-router.delete("/:id", rbacMiddleware(["Admin"]), deleteEmployeeController);
+router.get("/", rbacMiddleware(["ADMIN"]), getEmployeesController);
+router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmployeeByIdController);
+router.post("/", rbacMiddleware(["ADMIN"]), createEmployeeController);
+router.patch("/:id", rbacMiddleware(["ADMIN"]), updateEmployeeController);
+router.delete("/:id", rbacMiddleware(["ADMIN"]), deleteEmployeeController);
 
-router.post("/assign/schedule", rbacMiddleware(["Admin"]), assignShiftToEmployeeCont);
-router.get("/schedule", rbacMiddleware(["Admin", "Employee"]), getEmployeeShiftsController);
+router.post("/assign/schedule", rbacMiddleware(["ADMIN"]), assignShiftToEmployeeCont);
+router.get("/schedule", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmployeeShiftsController);
 
-router.get("/status", rbacMiddleware(["Admin"]), getEmploymentStatusController);
-router.get("/status/:id", rbacMiddleware(["Admin", "Employee"]), getEmploymentStatusByIdController);
-router.post("/status", rbacMiddleware(["Admin"]), createEmploymentStatusController);
-router.patch("/status/:id", rbacMiddleware(["Admin"]), updateEmploymentStatusController);
-router.delete("/status/:id", rbacMiddleware(["Admin"]), deleteEmploymentStatusController);
+router.get("/status", rbacMiddleware(["ADMIN"]), getEmploymentStatusController);
+router.get("/status/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmploymentStatusByIdController);
+router.post("/status", rbacMiddleware(["ADMIN"]), createEmploymentStatusController);
+router.patch("/status/:id", rbacMiddleware(["ADMIN"]), updateEmploymentStatusController);
+router.delete("/status/:id", rbacMiddleware(["ADMIN"]), deleteEmploymentStatusController);
 
 export default router;

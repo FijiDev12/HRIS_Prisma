@@ -7,6 +7,6 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/log", rbacMiddleware(["Admin", "Employee"]), createTimeLogController);
+router.get("/log", rbacMiddleware(["ADMIN", "EMPLOYEE"]), createTimeLogController);
 
 export default router;
