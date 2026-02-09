@@ -41,7 +41,7 @@ app.use("/api/v1/dtr", dtrRoutes);
 app.use("/api/v1/employee", employeeRoutes);
 app.use("/api/v1/holiday", holidayRoutes);
 app.use("/api/v1/sites", siteRoutes);
-app.use("/api/v1/time", timeLogRoutes);
+app.use("/api/v1/employee/time", timeLogRoutes);
 app.use("/api/v1/position", positionRoutes);
 app.use("/api/v1/role", roleRoutes);
 app.use("/api/v1/restday", restdayRoutes);
