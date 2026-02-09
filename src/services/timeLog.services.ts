@@ -1,8 +1,9 @@
 import { prisma } from "../util/prisma.util";
 
 export async function createTimeLog(employeeNo: number) {
-    const now = new Date();
-
+    const date = new Date();
+    const now = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+    
     const employee: any = await prisma.employee.findUnique({
         where: { employeeNo, deletedAt: null }
     });
@@ -50,7 +51,7 @@ export async function createTimeLog(employeeNo: number) {
     }
 
     const timeLog = await prisma.timeLog.create({
-        data: { employeeId: id, type: logType, logDate },
+        data: { employeeId: id, type: logType, loggedAt: now, logDate },
     });
 
     dtr = await prisma.dTR.upsert({
