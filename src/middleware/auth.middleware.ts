@@ -1,55 +1,76 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { TokenExpiredError } from "jsonwebtoken";
+import crypto from "crypto";
 import { prisma } from "../util/prisma.util";
 import { redis } from "../util/redis.util";
 
-const JWT_SECRET = process.env.JWT_SECRET as string
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
 export interface AuthRequest extends Request {
-    user?: any
+    user?: any;
 }
 
-export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authMiddleware = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+) => {
     if (req.path === "/timelogs") return next();
 
-    try {
-        const authHeader = req.headers.authorization
-        if (!authHeader) return res.status(401).json({
-            code: 401,
-            message: "No token provided"
-        })
-
-        const parts = authHeader.split(" ")
-        if (parts.length !== 2) return res.status(401).json({
-            code: 401,
-            message: "Invalid auth header"
-        })
-        const token = parts[1]
-
-        const blocked = await redis.get(`bl:${token}`)
-        if (blocked) return res.status(401).json({
-            code: 401,
-            message: "Session expired"
-        })
-
-        const decoded: any = jwt.verify(token, JWT_SECRET)
-
-        const user = await prisma.user.findUnique({
-            where: { id: decoded.id },
-            include: { role: true },
-        })
-
-        if (!user) return res.status(401).json({
-            code: 401,
-            message: "Invalid token"
-        })
-
-        req.user = user
-        next();
-    } catch (err) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
         return res.status(401).json({
             code: 401,
-            message: "Unauthorized"
-        })
+            message: "No token provided",
+        });
     }
-}
+
+    const [scheme, token] = authHeader.split(" ");
+    if (scheme !== "Bearer" || !token) {
+        return res.status(401).json({
+            code: 401,
+            message: "Invalid authorization header",
+        });
+    }
+
+    try {
+        const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+        const blocked = await redis.get(`bl:${tokenHash}`);
+
+        if (blocked) {
+            return res.status(401).json({
+                code: 401,
+                message: "Session expired",
+            });
+        }
+
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+
+        const user = await prisma.user.findFirst({
+            where: { id: decoded.id, deletedAt: null },
+            include: { role: true },
+        });
+
+        if (!user) {
+            return res.status(401).json({
+                code: 401,
+                message: "Invalid token",
+            });
+        }
+
+        req.user = user;
+        next();
+    } catch (err) {
+        if (err instanceof TokenExpiredError) {
+            return res.status(401).json({
+                code: 401,
+                message: "Access token expired",
+            });
+        }
+
+        return res.status(401).json({
+            code: 401,
+            message: "Unauthorized",
+        });
+    }
+};
