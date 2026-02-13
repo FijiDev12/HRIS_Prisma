@@ -202,8 +202,9 @@ export const getLeaveRequestByEmpIdController = async (req: Request, res: Respon
 }
 
 export const createLeaveRequestController = async (req: Request, res: Response) => {
-    const { employeeId, leaveTypeId, fromDate, toDate, totalDays, reason, createdBy } = await req.body;
-    if(!employeeId || !leaveTypeId || !fromDate || !toDate || !totalDays || !reason || !createdBy) {
+    console.log(req.body)
+    const { employeeId, leaveTypeId, fromDate, toDate, reason, createdBy } = await req.body;
+    if(!employeeId || !leaveTypeId || !fromDate || !toDate || !reason || !createdBy) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'

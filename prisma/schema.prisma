@@ -283,6 +283,7 @@ model LeaveRequest {
   remarks String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  isHalfDay Boolean @default(false)
 
   employee  Employee  @relation("EmployeeLeaveRequests", fields:[employeeId], references:[id])
   leaveType LeaveType @relation(fields:[leaveTypeId], references:[id])

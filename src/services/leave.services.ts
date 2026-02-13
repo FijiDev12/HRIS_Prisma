@@ -10,9 +10,9 @@ interface LeaveRequestType {
     leaveTypeId: number;
     fromDate: string;
     toDate: string;
-    totalDays: number;
     reason: string;
     createdBy: number;
+    isHalfday: boolean;
 }
 
 interface LeaveApproveType {
@@ -60,38 +60,127 @@ export async function deleteLeaveService(id: number) {
     return result;
 }
 
+function calculateWorkingDays(
+    startDate: Date,
+    endDate: Date,
+    holidays: Date[],
+    restDays: number[],
+    isHalfDay: boolean
+): number {
+    let totalDays = 0;
+    const current = new Date(startDate);
+
+    while (current <= endDate) {
+        const day = current.getDay();
+
+        const isRestDay = restDays.includes(day);
+        const isHoliday = holidays.some(
+            h => h.toDateString() === current.toDateString()
+        );
+
+        if (!isRestDay && !isHoliday) {
+            totalDays++;
+        }
+
+        current.setDate(current.getDate() + 1);
+    }
+
+    if (isHalfDay) {
+        return 0.5;
+    }
+
+    return totalDays;
+}
+
 export async function createLeaveReqService(data: LeaveRequestType) {
-    const { employeeId, leaveTypeId, totalDays } = data;
+    const { employeeId, leaveTypeId, fromDate, toDate, isHalfday } = data;
     const currentYear = new Date().getFullYear();
 
-    const leaveBalance = await prisma.leaveBalance.findUnique({
+    if (new Date(toDate) < new Date(fromDate)) {
+        throw new Error("End date cannot be before start date.");
+    }
+
+    return await prisma.$transaction(async (tx) => {
+        const overlapping = await tx.leaveRequest.findFirst({
         where: {
-            employeeId_leaveTypeId_year: {
+            employeeId,
+            status: { not: "REJECTED" },
+            OR: [
+                {
+                    fromDate: { lte: toDate },
+                    toDate: { gte: fromDate },
+                },
+            ],
+        },
+        });
+
+        if (overlapping) {
+            throw new Error("Leave request overlaps with existing leave.");
+        }
+
+        const holidays = await tx.holidayType.findMany({
+            where: {
+                holidayDate: {
+                    gte: new Date(fromDate),
+                    lte: new Date(toDate),
+                },
+            },
+        });
+        const holidayDates = holidays.map((h: any) => new Date(h.date));
+
+        const restDayRecords = await tx.restDay.findMany({
+            where: { employeeId },
+        });
+        const restDays = restDayRecords.map(r => r.dayOfWeek);
+
+        const totalDays = calculateWorkingDays(
+            new Date(fromDate),
+            new Date(toDate),
+            holidayDates,
+            restDays,
+            isHalfday
+        );
+
+        if (totalDays <= 0) {
+            throw new Error("Selected dates fall on rest days or holidays.");
+        }
+
+        const leaveBalance = await tx.leaveBalance.findFirst({
+            where: {
                 employeeId,
                 leaveTypeId,
-                year: currentYear
+                year: currentYear,
+                deletedAt: null,
             },
-            deletedAt: null
+        });
+
+        if (!leaveBalance) {
+            throw new Error("Leave balance not found for this employee and leave type.");
         }
+
+        if (leaveBalance.remainingDays < totalDays) {
+            throw new Error(
+                `Insufficient leave balance. Remaining: ${leaveBalance.remainingDays} days`
+            );
+        }
+
+        const leaveRequest = await tx.leaveRequest.create({
+            data: {
+                ...data,
+                totalDays,
+            },
+        });
+
+        await tx.leaveBalance.update({
+            where: { id: leaveBalance.id },
+            data: {
+                usedDays: leaveBalance.usedDays + totalDays,
+                remainingDays: leaveBalance.remainingDays - totalDays,
+            },
+        });
+
+        return leaveRequest;
     });
-
-    if (!leaveBalance) {
-        throw new Error("Leave balance not found for this employee and leave type.");
-    }
-
-    if (leaveBalance.remainingDays < totalDays) {
-        throw new Error(
-            `Insufficient leave balance. Remaining: ${leaveBalance.remainingDays} days`
-        );
-    }
-    const result = prisma.leaveRequest.create({ data });
-
-    await prisma.leaveBalance.update({
-        where: { id: leaveBalance.id },
-        data: { usedDays: leaveBalance.usedDays + totalDays, remainingDays: leaveBalance.remainingDays - totalDays }
-    });
-
-    return result;
 }
 
 export async function getLeaveRequestService() {
@@ -108,7 +197,8 @@ export async function getLeaveRequestService() {
 }
 
 export async function getLeaveRequestByIdService(id: number) {
-    const result = await prisma.leaveRequest.findMany({
+    console.log("id:", id)
+    const result = await prisma.leaveRequest.findUnique({
         where: { id },
         include: {
             employee: true,
