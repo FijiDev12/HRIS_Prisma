@@ -212,6 +212,14 @@ export async function getLeaveBalanceByIdService(id: number) {
     return result;
 }
 
+export async function getLeaveBalanceByEmpIdService(employeeId: number) {
+    const result = await prisma.leaveBalance.findMany({
+        where: { employeeId, deletedAt: null }
+    });
+
+    return result;
+}
+
 export async function updateLeaveBalanceService(id: number, data: any) {
     const result = await prisma.leaveBalance.update({
         where: { id },

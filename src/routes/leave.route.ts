@@ -3,14 +3,20 @@ import { authMiddleware } from "../middleware/auth.middleware";
 import { rbacMiddleware } from "../middleware/rbac.middleware";
 import { 
     approveLeaveRequestController,
+    createLeaveBalanceController,
     createLeaveController, 
     createLeaveRequestController, 
+    deleteLeaveBalanceController, 
     deleteLeaveController, 
+    getLeaveBalanceByEmpIdController, 
+    getLeaveBalanceByIdController, 
+    getLeaveBalanceController, 
     getLeaveByIdController, 
     getLeaveRequestByIdController, 
     getLeaveRequestController, 
     getLeavesController, 
     rejectLeaveRequestController, 
+    updateLeaveBalanceController, 
     updateLeaveController 
 } from "../controllers/leave.controller";
 
@@ -30,10 +36,11 @@ router.post("/request", rbacMiddleware(["ADMIN"]), createLeaveRequestController)
 router.patch("/approve/:id", rbacMiddleware(["ADMIN", "HR"]), approveLeaveRequestController);
 router.patch("/reject/:id", rbacMiddleware(["ADMIN", "HR"]), rejectLeaveRequestController);
 
-router.get("/balance", rbacMiddleware(["ADMIN"]), getLeavesController);
-router.get("/balance/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getLeaveByIdController);
-router.post("/balance", rbacMiddleware(["ADMIN"]), createLeaveController);
-router.patch("/balance/:id", rbacMiddleware(["ADMIN"]), updateLeaveController);
-router.delete("/balance:id", rbacMiddleware(["ADMIN"]), deleteLeaveController);
+router.get("/balance/all", rbacMiddleware(["ADMIN"]), getLeaveBalanceController);
+router.get("/balance/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getLeaveBalanceByIdController);
+router.get("/balance/employee/:empid", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getLeaveBalanceByEmpIdController);
+router.post("/balance", rbacMiddleware(["ADMIN"]), createLeaveBalanceController);
+router.patch("/balance/:id", rbacMiddleware(["ADMIN"]), updateLeaveBalanceController);
+router.delete("/balance/:id", rbacMiddleware(["ADMIN"]), deleteLeaveBalanceController);
 
 export default router;

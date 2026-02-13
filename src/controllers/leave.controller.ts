@@ -6,6 +6,7 @@ import {
     createLeaveService, 
     deleteLeaveBalanceService, 
     deleteLeaveService, 
+    getLeaveBalanceByEmpIdService, 
     getLeaveBalanceByIdService, 
     getLeaveBalanceService, 
     getLeaveByIdService, 
@@ -266,6 +267,7 @@ export const rejectLeaveRequestController = async (req: Request, res: Response) 
 
 export const getLeaveBalanceController = async (_:Request, res: Response) => {
     try {
+        console.log(12)
         const result = await getLeaveBalanceService();
         res.status(200).json({
             code: 200,
@@ -291,6 +293,30 @@ export const getLeaveBalanceByIdController = async (req: Request, res: Response)
     
     try {
         const result = await getLeaveBalanceByIdService(Number(id));
+        res.status(200).json({
+            code: 200,
+            message: 'Success',
+            data: result
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            code: 500,
+            message: error.message || 'Internal Server Error'
+        });
+    }
+}
+
+export const getLeaveBalanceByEmpIdController = async (req: Request, res: Response) => {
+    const empid = Number(req.params.empid);
+    if(!empid || isNaN(empid)) {
+        return res.status(400).json({
+            code: 400,
+            message: 'Bad Request'
+        });
+    }
+    
+    try {
+        const result = await getLeaveBalanceByEmpIdService(Number(empid));
         res.status(200).json({
             code: 200,
             message: 'Success',

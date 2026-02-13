@@ -122,7 +122,7 @@ model Employee {
   address String?
   email String  @unique
   contactNo String
-  profilePhoto String?
+  profilePhoto Bytes?
   positionId  Int
   departmentId Int
   siteId  Int
@@ -204,6 +204,7 @@ model TimeLog {
   type  LogType
   loggedAt  DateTime
   logDate String
+  selfie Bytes?
 
   employee Employee @relation(fields: [employeeId], references: [id])
 }

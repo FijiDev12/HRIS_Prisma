@@ -48,8 +48,8 @@ export const getRoleByIdController = async (req: Request, res: Response) => {
 }
 
 export const createRoleController = async (req: Request, res: Response) => {
-    const { roleName, createdBy } = await req.body;
-    if(!roleName || !createdBy) {
+    const { roleName } = await req.body;
+    if(!roleName) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -80,8 +80,8 @@ export const updateRoleController = async (req: Request, res: Response) => {
         });
     }
 
-    const { roleName, createdBy } = await req.body;
-    if(!roleName || !createdBy) {
+    const { roleName } = await req.body;
+    if(!roleName) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'

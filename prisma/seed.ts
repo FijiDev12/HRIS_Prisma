@@ -125,6 +125,132 @@ async function main() {
         skipDuplicates: true
     });
 
+    await prisma.holidayType.createMany({
+        data: [
+            {
+                holidayName: "New Year's Day",
+                holidayDate: new Date("2026-01-01"),
+                siteId: site.id,
+                createdBy,
+                type: "REGULAR"
+            },
+            {
+                holidayName: "EDSA Revolution Anniversary",
+                holidayDate: new Date("2026-02-25"),
+                siteId: site.id,
+                createdBy,
+                type: "SPECIAL"
+            }
+        ],
+        skipDuplicates: true
+    });
+
+    await prisma.restDay.upsert({
+        where: {
+            employeeId_dayOfWeek: {
+                employeeId: employee.id,
+                dayOfWeek: 0
+            }
+        },
+        update: {},
+        create: {
+            employeeId: employee.id,
+            dayOfWeek: 0
+        }
+    });
+
+    const leaveTypes = await prisma.leaveType.findMany();
+
+    for (const lt of leaveTypes) {
+        await prisma.leaveBalance.upsert({
+            where: {
+                employeeId_leaveTypeId_year: {
+                    employeeId: employee.id,
+                    leaveTypeId: lt.id,
+                    year: 2026
+                }
+            },
+            update: {},
+            create: {
+                employeeId: employee.id,
+                leaveTypeId: lt.id,
+                totalDays: 10,
+                usedDays: 0,
+                remainingDays: 10,
+                year: 2026
+            }
+        });
+    }
+
+    const vacationLeave = leaveTypes.find(
+        (l) => l.leaveName === "Vacation Leave"
+    );
+
+    if (vacationLeave) {
+        await prisma.leaveRequest.create({
+            data: {
+                employeeId: employee.id,
+                leaveTypeId: vacationLeave.id,
+                fromDate: "2026-02-03",
+                toDate: "2026-02-03",
+                totalDays: 1,
+                reason: "Personal matters",
+                status: "APPROVED",
+                createdBy: employee.userId!,
+                approverId: adminUser.id,
+                approvedAt: new Date(),
+                remarks: "Approved"
+            }
+        });
+
+        await prisma.leaveBalance.update({
+            where: {
+                employeeId_leaveTypeId_year: {
+                    employeeId: employee.id,
+                    leaveTypeId: vacationLeave.id,
+                    year: 2026
+                }
+            },
+            data: {
+                usedDays: 1,
+                remainingDays: {
+                    decrement: 1
+                }
+            }
+        });
+    }
+
+    await prisma.overtimeRequest.create({
+        data: {
+            employeeId: employee.id,
+            workDate: "2026-02-04",
+            startTime: "17:00",
+            endTime: "19:00",
+            totalMinutes: 120,
+            reason: "Payroll preparation",
+            status: "APPROVED",
+            createdBy: employee.userId!,
+            approverId: adminUser.id,
+            approvedAt: new Date(),
+            remarks: "Approved OT"
+        }
+    });
+
+    await prisma.officialBusiness.create({
+        data: {
+            employeeId: employee.id,
+            workDate: "2026-02-05",
+            startTime: "10:00",
+            endTime: "15:00",
+            purpose: "Client meeting",
+            status: "APPROVED",
+            createdBy: employee.userId!,
+            approverId: adminUser.id,
+            approvedAt: new Date(),
+            remarks: "Approved OB"
+        }
+    });
+
     console.log("✅ Seed completed successfully!");
 }
 
