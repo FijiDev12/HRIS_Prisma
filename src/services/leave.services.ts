@@ -107,6 +107,20 @@ export async function getLeaveRequestService() {
     return result;
 }
 
+export async function getLeaveRequestByIdService(id: number) {
+    const result = await prisma.leaveRequest.findMany({
+        where: { id },
+        include: {
+            employee: true,
+            leaveType: true,
+            creator: true,
+            approver: true
+        }
+    });
+
+    return result;
+}
+
 export async function getLeaveRequestByEmpIdService(employeeId: number) {
     const result = await prisma.leaveRequest.findMany({
         where: { employeeId },

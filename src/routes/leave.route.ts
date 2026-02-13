@@ -12,6 +12,7 @@ import {
     getLeaveBalanceByIdController, 
     getLeaveBalanceController, 
     getLeaveByIdController, 
+    getLeaveRequestByEmpIdController, 
     getLeaveRequestByIdController, 
     getLeaveRequestController, 
     getLeavesController, 
@@ -31,6 +32,7 @@ router.patch("/:id", rbacMiddleware(["ADMIN"]), updateLeaveController);
 router.delete("/:id", rbacMiddleware(["ADMIN"]), deleteLeaveController);
 
 router.get("/request", rbacMiddleware(["ADMIN"]), getLeaveRequestController);
+router.get("/request/employee/:empid", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getLeaveRequestByEmpIdController);
 router.get("/request/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getLeaveRequestByIdController);
 router.post("/request", rbacMiddleware(["ADMIN"]), createLeaveRequestController);
 router.patch("/approve/:id", rbacMiddleware(["ADMIN", "HR"]), approveLeaveRequestController);

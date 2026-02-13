@@ -177,6 +177,30 @@ export const getLeaveRequestByIdController = async (req: Request, res: Response)
     }
 }
 
+export const getLeaveRequestByEmpIdController = async (req: Request, res: Response) => {
+    const empid = Number(req.params.empid);
+    if(!empid || isNaN(empid)) {
+        return res.status(400).json({
+            code: 400,
+            message: 'Bad Request'
+        });
+    }
+    
+    try {
+        const result = await getLeaveRequestByEmpIdService(Number(empid));
+        res.status(200).json({
+            code: 200,
+            message: 'Success',
+            data: result
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            code: 500,
+            message: error.message || 'Internal Server Error'
+        });
+    }
+}
+
 export const createLeaveRequestController = async (req: Request, res: Response) => {
     const { employeeId, leaveTypeId, fromDate, toDate, totalDays, reason, createdBy } = await req.body;
     if(!employeeId || !leaveTypeId || !fromDate || !toDate || !totalDays || !reason || !createdBy) {
