@@ -26,6 +26,9 @@ model Site {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+  latitude Float?
+  longitude Float?
+  radius    Int?
 
   employees Employee[]
   departments Department[]
@@ -205,6 +208,8 @@ model TimeLog {
   loggedAt  DateTime
   logDate String
   selfie String?
+  latitude  Float?
+  longitude Float?
 
   employee Employee @relation(fields: [employeeId], references: [id])
 }

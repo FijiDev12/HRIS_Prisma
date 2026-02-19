@@ -2,17 +2,10 @@ import { Request, Response } from "express";
 import { createTimeLog } from "../services/timeLog.services";
 
 export const createTimeLogController = async (req: Request, res: Response) => {
-    const { employeeNo } = await req.body;
+    const { employeeNo, latitude, longitude } = await req.body;
     const selfie = req.file;
 
-    if (!employeeNo) {
-        return res.status(400).json({
-            code: 400,
-            message: 'Bad Request'
-        });
-    }
-
-    if (!selfie) {
+    if (!employeeNo || !selfie || !latitude || !longitude) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -20,7 +13,7 @@ export const createTimeLogController = async (req: Request, res: Response) => {
     }
 
     try {
-        const result = await createTimeLog(Number(employeeNo), selfie.buffer);
+        const result = await createTimeLog(Number(employeeNo), selfie.buffer, Number(latitude), Number(longitude));
         res.status(201).json({
             code: 201,
             message: 'Success',

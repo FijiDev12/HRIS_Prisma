@@ -1,6 +1,21 @@
 import { prisma } from "../util/prisma.util";
 
-export async function createTimeLog(employeeNo: number, selfieBuffer: Buffer) {
+export async function createTimeLog(employeeNo: number, selfieBuffer: Buffer, latitude: number, longitude: number) {
+    function getDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+        const R = 6371e3; // meters
+        const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+        const φ1 = toRad(lat1);
+        const φ2 = toRad(lat2);
+        const Δφ = toRad(lat2 - lat1);
+        const Δλ = toRad(lon2 - lon1);
+
+        const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
+    }
+
     const date = new Date();
     const now = new Date(date.getTime() + 8 * 60 * 60 * 1000);
 
@@ -50,10 +65,33 @@ export async function createTimeLog(employeeNo: number, selfieBuffer: Buffer) {
         }
     }
 
+    const site: any = await prisma.site.findUnique({
+        where: { id: employee.siteId }
+    });
+
+    console.log(site)
+
+    if (!site) throw new Error("Site not found");
+
+    const distanceFromSite = getDistanceInMeters(
+        latitude,
+        longitude,
+        site.latitude,
+        site.longitude
+    );
+
+    if (distanceFromSite > site.radius) {
+        return {
+            message: `Cannot clock ${logType} outside ${site.siteName} radius`,
+            distance: Math.round(distanceFromSite) + " meters",
+            allowedRadius: site.radius
+        };
+    }
+
     const base64Image = selfieBuffer.toString("base64");
 
     const timeLog = await prisma.timeLog.create({
-        data: { employeeId: id, type: logType, loggedAt: now, logDate, selfie: base64Image },
+        data: { employeeId: id, type: logType, loggedAt: now, logDate, selfie: base64Image, latitude, longitude },
     });
 
     dtr = await prisma.dTR.upsert({

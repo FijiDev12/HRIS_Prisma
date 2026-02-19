@@ -3,6 +3,9 @@ import { prisma } from "../util/prisma.util";
 interface SiteType {
     siteName: string;
     createdBy: number;
+    latitude: number;
+    longitude: number;
+    radius: number;
 }
 
 export async function createSiteService(data: SiteType) {

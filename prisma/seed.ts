@@ -39,6 +39,9 @@ async function main() {
         update: {},
         create: {
             siteName: "Main Office",
+            latitude: 14.5995,
+            longitude: 120.9842,
+            radius: 100,
             createdBy
         }
     });
