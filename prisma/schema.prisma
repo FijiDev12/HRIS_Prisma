@@ -204,7 +204,7 @@ model TimeLog {
   type  LogType
   loggedAt  DateTime
   logDate String
-  selfie Bytes?
+  selfie String?
 
   employee Employee @relation(fields: [employeeId], references: [id])
 }

@@ -3,15 +3,24 @@ import { createTimeLog } from "../services/timeLog.services";
 
 export const createTimeLogController = async (req: Request, res: Response) => {
     const { employeeNo } = await req.body;
-    if(!employeeNo) {
+    const selfie = req.file;
+
+    if (!employeeNo) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
         });
     }
-    
+
+    if (!selfie) {
+        return res.status(400).json({
+            code: 400,
+            message: 'Bad Request'
+        });
+    }
+
     try {
-        const result = await createTimeLog(Number(employeeNo));
+        const result = await createTimeLog(Number(employeeNo), selfie.buffer);
         res.status(201).json({
             code: 201,
             message: 'Success',

@@ -32,6 +32,19 @@ export async function getObRequestService() {
     return result;
 }
 
+export async function getObRequestByIdService(id: number) {
+    const result = await prisma.officialBusiness.findUnique({
+        where: { id },
+        include: {
+            employee: true,
+            creator: true,
+            approver: true
+        }
+    });
+
+    return result;
+}
+
 export async function getObRequestByEmpIdService(employeeId: number) {
     const result = await prisma.officialBusiness.findMany({
         where: { employeeId },

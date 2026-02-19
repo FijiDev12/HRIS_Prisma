@@ -1,9 +1,9 @@
 import { prisma } from "../util/prisma.util";
 
-export async function createTimeLog(employeeNo: number) {
+export async function createTimeLog(employeeNo: number, selfieBuffer: Buffer) {
     const date = new Date();
     const now = new Date(date.getTime() + 8 * 60 * 60 * 1000);
-    
+
     const employee: any = await prisma.employee.findUnique({
         where: { employeeNo, deletedAt: null }
     });
@@ -11,7 +11,7 @@ export async function createTimeLog(employeeNo: number) {
 
     if (!employee) throw new Error("Employee not found");
     const { id } = employee;
-    
+
     const employeeShift = await prisma.employeeShift.findFirst({
         where: { employeeId: id },
         include: { shift: true }
@@ -45,13 +45,15 @@ export async function createTimeLog(employeeNo: number) {
             logType = "OUT";
         }
         else {
-            return null;
+            return "Already clocked IN and OUT for today";
             // throw new Error("Already clocked IN and OUT for today");
         }
     }
 
+    const base64Image = selfieBuffer.toString("base64");
+
     const timeLog = await prisma.timeLog.create({
-        data: { employeeId: id, type: logType, loggedAt: now, logDate },
+        data: { employeeId: id, type: logType, loggedAt: now, logDate, selfie: base64Image },
     });
 
     dtr = await prisma.dTR.upsert({
@@ -98,7 +100,12 @@ export async function createTimeLog(employeeNo: number) {
             where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
             data: { status: "LEAVE", timeIn: null, timeOut: null, lateMinutes: 0, undertimeMinutes: 0, overtimeMinutes: 0 },
         });
-        return timeLog;
+        return {
+            ...timeLog,
+            selfie: timeLog.selfie
+                ? `data:image/jpeg;base64,${timeLog.selfie}`
+                : null,
+        };
     }
 
     if (ob) {
@@ -106,7 +113,12 @@ export async function createTimeLog(employeeNo: number) {
             where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
             data: { status: "OB", lateMinutes: 0, undertimeMinutes: 0 },
         });
-        return timeLog;
+        return {
+            ...timeLog,
+            selfie: timeLog.selfie
+                ? `data:image/jpeg;base64,${timeLog.selfie}`
+                : null,
+        };
     }
 
     if (restDay) {
@@ -114,7 +126,12 @@ export async function createTimeLog(employeeNo: number) {
             where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
             data: { status: "RESTDAY", lateMinutes: 0, undertimeMinutes: 0 },
         });
-        return timeLog;
+        return {
+            ...timeLog,
+            selfie: timeLog.selfie
+                ? `data:image/jpeg;base64,${timeLog.selfie}`
+                : null,
+        };
     }
 
     if (holiday) {
@@ -122,7 +139,12 @@ export async function createTimeLog(employeeNo: number) {
             where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
             data: { status: "HOLIDAY", lateMinutes: 0, undertimeMinutes: 0 },
         });
-        return timeLog;
+        return {
+            ...timeLog,
+            selfie: timeLog.selfie
+                ? `data:image/jpeg;base64,${timeLog.selfie}`
+                : null,
+        };
     }
 
     if (shift.startTime && shift.endTime && logType === "OUT") {
@@ -143,5 +165,10 @@ export async function createTimeLog(employeeNo: number) {
         });
     }
 
-    return timeLog;
+    return {
+        ...timeLog,
+        selfie: timeLog.selfie
+            ? `data:image/jpeg;base64,${timeLog.selfie}`
+            : null,
+    };
 }

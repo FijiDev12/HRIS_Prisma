@@ -102,16 +102,16 @@ export async function createLeaveReqService(data: LeaveRequestType) {
 
     return await prisma.$transaction(async (tx) => {
         const overlapping = await tx.leaveRequest.findFirst({
-        where: {
-            employeeId,
-            status: { not: "REJECTED" },
-            OR: [
-                {
-                    fromDate: { lte: toDate },
-                    toDate: { gte: fromDate },
-                },
-            ],
-        },
+            where: {
+                employeeId,
+                status: { not: "REJECTED" },
+                OR: [
+                    {
+                        fromDate: { lte: toDate },
+                        toDate: { gte: fromDate },
+                    },
+                ],
+            },
         });
 
         if (overlapping) {
@@ -240,11 +240,11 @@ export async function approveLeaveRequestService(id: number, data: Partial<Leave
     const year = new Date().getFullYear();
     const balance = await prisma.leaveBalance.findUnique({
         where: {
-        employeeId_leaveTypeId_year: {
-            employeeId: leave.employeeId,
-            leaveTypeId: leave.leaveTypeId,
-            year
-        }
+            employeeId_leaveTypeId_year: {
+                employeeId: leave.employeeId,
+                leaveTypeId: leave.leaveTypeId,
+                year
+            }
         }
     });
 
@@ -330,7 +330,7 @@ export async function updateLeaveBalanceService(id: number, data: any) {
         data: {
             leaveTypeId: data.leaveTypeId,
             totalDays: data.totalDays,
-            remainingDays: data.totalDays,
+            remainingDays: data.remainingDays,
         }
     });
 

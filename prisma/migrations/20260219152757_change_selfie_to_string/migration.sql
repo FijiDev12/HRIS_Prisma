@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "TimeLog" ALTER COLUMN "selfie" SET DATA TYPE TEXT;

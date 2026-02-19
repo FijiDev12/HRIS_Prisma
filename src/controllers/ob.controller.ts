@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
-import { 
+import {
     approveObRequestService,
-    createObReqService, 
-    getObRequestByEmpIdService, 
-    getObRequestService, 
-    rejectObRequestService 
+    createObReqService,
+    getObRequestByEmpIdService,
+    getObRequestByIdService,
+    getObRequestService,
+    rejectObRequestService
 } from "../services/ob.services";
 
-export const getObRequestController = async (_:Request, res: Response) => {
+export const getObRequestController = async (_: Request, res: Response) => {
     try {
         const result = await getObRequestService();
         res.status(200).json({
@@ -25,15 +26,39 @@ export const getObRequestController = async (_:Request, res: Response) => {
 
 export const getObRequestByIdController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
         });
     }
-    
+
     try {
-        const result = await getObRequestByEmpIdService(Number(id));
+        const result = await getObRequestByIdService(id);
+        res.status(200).json({
+            code: 200,
+            message: 'Success',
+            data: result
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            code: 500,
+            message: error.message || 'Internal Server Error'
+        });
+    }
+}
+
+export const getObRequestByEmpIdController = async (req: Request, res: Response) => {
+    const empId = Number(req.params.empid);
+    if (!empId || isNaN(empId)) {
+        return res.status(400).json({
+            code: 400,
+            message: 'Bad Request'
+        });
+    }
+
+    try {
+        const result = await getObRequestByEmpIdService(empId);
         res.status(200).json({
             code: 200,
             message: 'Success',
@@ -49,7 +74,7 @@ export const getObRequestByIdController = async (req: Request, res: Response) =>
 
 export const createObRequestController = async (req: Request, res: Response) => {
     const { employeeId, workDate, startTime, endTime, purpose } = await req.body;
-    if(!employeeId || !workDate || !startTime || !endTime || !purpose) {
+    if (!employeeId || !workDate || !startTime || !endTime || !purpose) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -73,7 +98,7 @@ export const createObRequestController = async (req: Request, res: Response) => 
 
 export const approveObRequestController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -81,7 +106,7 @@ export const approveObRequestController = async (req: Request, res: Response) =>
     }
 
     const { approverId, remarks } = await req.body;
-    if(!approverId || !remarks) {
+    if (!approverId || !remarks) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -105,7 +130,7 @@ export const approveObRequestController = async (req: Request, res: Response) =>
 
 export const rejectObRequestController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -113,7 +138,7 @@ export const rejectObRequestController = async (req: Request, res: Response) => 
     }
 
     const { approverId, remarks } = await req.body;
-    if(!approverId || !remarks) {
+    if (!approverId || !remarks) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'

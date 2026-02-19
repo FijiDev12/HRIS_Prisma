@@ -33,6 +33,19 @@ export async function getOtRequestService() {
     return result;
 }
 
+export async function getOtRequestByIdService(id: number) {
+    const result = await prisma.overtimeRequest.findUnique({
+        where: { id },
+        include: {
+            employee: true,
+            creator: true,
+            approver: true
+        }
+    });
+
+    return result;
+}
+
 export async function getOtRequestByEmpIdService(employeeId: number) {
     const result = await prisma.overtimeRequest.findMany({
         where: { employeeId },
