@@ -8,54 +8,51 @@ datasource db {
 }
 
 model Role {
-  id  Int @id @default(autoincrement())
-  roleName  String  @unique
-  // createdBy Int
+  id        Int       @id @default(autoincrement())
+  roleName  String    @unique
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-
-  // creator User  @relation("RoleCreator", fields: [createdBy], references: [id])
-  users User[]
+  users     User[]
 }
 
 model Site {
-  id  Int   @id @default(autoincrement())
-  siteName  String  @unique
+  id        Int       @id @default(autoincrement())
+  siteName  String    @unique
   createdBy Int
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-  latitude Float?
+  latitude  Float?
   longitude Float?
   radius    Int?
 
-  employees Employee[]
+  employees   Employee[]
   departments Department[]
 }
 
 model Department {
-  id  Int @id @default(autoincrement())
-  departmentName String @unique
-  siteId  Int
-  createdBy Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id             Int       @id @default(autoincrement())
+  departmentName String    @unique
+  siteId         Int
+  createdBy      Int
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
 
-  site  Site  @relation(fields: [siteId], references: [id])
+  site      Site       @relation(fields: [siteId], references: [id])
   positions Position[]
   employees Employee[]
 }
 
 model Position {
-  id  Int @id @default(autoincrement())
-  positionName  String  @unique
-  departmentId  Int
-  createdBy Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id           Int       @id @default(autoincrement())
+  positionName String    @unique
+  departmentId Int
+  createdBy    Int
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
 
   department Department @relation(fields: [departmentId], references: [id])
   employees  Employee[]
@@ -67,128 +64,131 @@ enum HolidayEnum {
 }
 
 model HolidayType {
-  id Int @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   holidayName String
   holidayDate DateTime
-  siteId Int
-  createdBy Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  type  HolidayEnum
+  siteId      Int
+  createdBy   Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+  type        HolidayEnum
 }
 
 model LeaveType {
-  id  Int @id @default(autoincrement())
-  leaveName String  @unique
-  isPaid  Boolean @default(true)
-  createdBy Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id            Int            @id @default(autoincrement())
+  leaveName     String         @unique
+  isPaid        Boolean        @default(true)
+  createdBy     Int
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
   leaveRequests LeaveRequest[]
   leaveBalances LeaveBalance[]
 }
 
 model User {
-  id  Int @id @default(autoincrement())
-  email String  @unique
-  password  String
-  roleId  Int
-  employeeId Int? @unique
+  id         Int       @id @default(autoincrement())
+  email      String    @unique
+  password   String
+  roleId     Int
+  employeeId Int?      @unique
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
 
-  employee  Employee?
-  role  Role  @relation(fields: [roleId], references: [id])
+  employee              Employee?
+  role                  Role                   @relation(fields: [roleId], references: [id])
   // createdRoles Role[] @relation("RoleCreator")
-  createdOTs OvertimeRequest[] @relation("OTCreatedBy")
-  approvedOTs OvertimeRequest[] @relation("OTApprovedBy")
-  createdLeaves LeaveRequest[] @relation("LeaveCreatedBy")
-  approvedLeaves LeaveRequest[] @relation("LeaveApprovedBy")
-  createdOBs OfficialBusiness[] @relation("OBCreatedBy")
-  approvedOBs OfficialBusiness[] @relation("OBApprovedBy")
+  createdOTs            OvertimeRequest[]      @relation("OTCreatedBy")
+  approvedOTs           OvertimeRequest[]      @relation("OTApprovedBy")
+  createdLeaves         LeaveRequest[]         @relation("LeaveCreatedBy")
+  approvedLeaves        LeaveRequest[]         @relation("LeaveApprovedBy")
+  createdOBs            OfficialBusiness[]     @relation("OBCreatedBy")
+  approvedOBs           OfficialBusiness[]     @relation("OBApprovedBy")
+  attendanceCorrections AttendanceCorrection[]
 }
 
 model Employee {
-  id  Int @id @default(autoincrement())
-  employeeNo  Int @unique
-  firstName String
-  middleName  String?
-  lastName  String
-  suffix  String?
-  gender  String?
-  birthDate DateTime
-  civilStatus String  @default("Single")
-  nationality String  @default("Filipino")
-  address String?
-  email String  @unique
-  contactNo String
-  profilePhoto Bytes?
-  positionId  Int
+  id           Int       @id @default(autoincrement())
+  employeeNo   Int       @unique
+  firstName    String
+  middleName   String?
+  lastName     String
+  suffix       String?
+  gender       String?
+  birthDate    DateTime
+  civilStatus  String    @default("Single")
+  nationality  String    @default("Filipino")
+  address      String?
+  email        String    @unique
+  contactNo    String
+  profilePhoto String?
+  positionId   Int
   departmentId Int
-  siteId  Int
+  siteId       Int
   employmentId Int
-  dateHired DateTime
-  isActive  Boolean @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  userId    Int?  @unique
+  dateHired    DateTime
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  userId       Int?      @unique
 
-  position  Position @relation(fields: [positionId], references: [id])
-  department Department @relation(fields: [departmentId], references: [id])
-  site  Site  @relation(fields: [siteId], references: [id])
-  employment EmploymentType  @relation(fields: [employmentId], references: [id])
-  user  User? @relation(fields: [userId], references: [id])
+  position              Position               @relation(fields: [positionId], references: [id])
+  department            Department             @relation(fields: [departmentId], references: [id])
+  site                  Site                   @relation(fields: [siteId], references: [id])
+  employment            EmploymentType         @relation(fields: [employmentId], references: [id])
+  user                  User?                  @relation(fields: [userId], references: [id])
   // shifts  EmployeeShift[]
-  timelogs  TimeLog[]
-  dtrs  DTR[]
-  restDays  RestDay[]
-  otRequests  OvertimeRequest[] @relation("EmployeeOTRequests")
-  leaveRequests LeaveRequest[]  @relation("EmployeeLeaveRequests")
-  obRequests  OfficialBusiness[]  @relation("EmployeeOBRequests")
-  leaveBalances LeaveBalance[]
+  timelogs              TimeLog[]
+  dtrs                  DTR[]
+  restDays              RestDay[]
+  otRequests            OvertimeRequest[]      @relation("EmployeeOTRequests")
+  leaveRequests         LeaveRequest[]         @relation("EmployeeLeaveRequests")
+  obRequests            OfficialBusiness[]     @relation("EmployeeOBRequests")
+  leaveBalances         LeaveBalance[]
+  attendanceCorrections AttendanceCorrection[]
 }
 
 model EmploymentType {
-  id  Int @id @default(autoincrement())
-  employmentType String @unique
-  createdBy Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id             Int       @id @default(autoincrement())
+  employmentType String    @unique
+  createdBy      Int
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
 
   employees Employee[]
 }
 
 model Shift {
-  id  Int @id @default(autoincrement())
-  shiftName String  @unique
-  startTime String?
-  endTime String?
-  flexStart String?
-  flexEnd String?
-  requiredMinutes Int @default(480)
-  breakMinutes  Int @default(60)
-  graceMinutes  Int @default(10)
-  isFlexible  Boolean @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id              Int       @id @default(autoincrement())
+  shiftName       String    @unique
+  startTime       String?
+  endTime         String?
+  flexStart       String?
+  flexEnd         String?
+  requiredMinutes Int       @default(480)
+  breakMinutes    Int       @default(60)
+  graceMinutes    Int       @default(10)
+  isFlexible      Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
-  employees EmployeeShift[]
+  employees             EmployeeShift[]
+  attendanceCorrections AttendanceCorrection[]
 }
 
 model EmployeeShift {
-  id  Int @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   employeeId Int
-  shiftId Int
+  shiftId    Int
   workDate   DateTime
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
 
   // employee Employee @relation(fields: [employeeId], references: [id])
   shift Shift @relation(fields: [shiftId], references: [id])
@@ -202,29 +202,29 @@ enum LogType {
 }
 
 model TimeLog {
-  id  Int @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   employeeId Int
-  type  LogType
-  loggedAt  DateTime
-  logDate String
-  selfie String?
-  latitude  Float?
-  longitude Float?
+  type       LogType
+  loggedAt   DateTime
+  logDate    String
+  selfie     String?
+  latitude   Float?
+  longitude  Float?
 
   employee Employee @relation(fields: [employeeId], references: [id])
 }
 
 model DTR {
-  id  Int @id @default(autoincrement())
-  employeeId Int
-  workDate  String
-  timeIn  DateTime?
-  timeOut DateTime?
-  lateMinutes Int @default(0)
-  overtimeMinutes Int @default(0)
-  undertimeMinutes Int @default(0)
-  isHalfDay Boolean @default(false)
-  status  String
+  id               Int       @id @default(autoincrement())
+  employeeId       Int
+  workDate         String
+  timeIn           DateTime?
+  timeOut          DateTime?
+  lateMinutes      Int       @default(0)
+  overtimeMinutes  Int       @default(0)
+  undertimeMinutes Int       @default(0)
+  isHalfDay        Boolean   @default(false)
+  status           String
 
   employee Employee @relation(fields: [employeeId], references: [id])
 
@@ -232,13 +232,13 @@ model DTR {
 }
 
 model RestDay {
-  id  Int @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   employeeId Int
   dayOfWeek  Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
   employee Employee @relation(fields: [employeeId], references: [id])
 
   @@unique([employeeId, dayOfWeek])
@@ -251,99 +251,123 @@ enum ApprovalStatus {
 }
 
 model OvertimeRequest {
-  id  Int @id @default(autoincrement())
-  employeeId Int
-  workDate  String
-  startTime String
-  endTime String
-  totalMinutes Int
-  reason  String?
-  status  ApprovalStatus @default(PENDING)
-  createdBy  Int
-  approverId Int?
+  id                 Int            @id @default(autoincrement())
+  employeeId         Int
+  workDate           String
+  startTime          String
+  endTime            String
+  totalMinutes       Int
+  reason             String?
+  status             ApprovalStatus @default(PENDING)
+  createdBy          Int
+  approverId         Int?
   approverPositionId Int?
-  approvedAt DateTime?
-  remarks String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  approvedAt         DateTime?
+  remarks            String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 
-  employee Employee @relation("EmployeeOTRequests", fields:[employeeId], references:[id])
-  creator  User @relation("OTCreatedBy", fields:[createdBy], references:[id])
-  approver User? @relation("OTApprovedBy", fields:[approverId], references:[id])
+  employee Employee @relation("EmployeeOTRequests", fields: [employeeId], references: [id])
+  creator  User     @relation("OTCreatedBy", fields: [createdBy], references: [id])
+  approver User?    @relation("OTApprovedBy", fields: [approverId], references: [id])
 }
 
 model LeaveRequest {
-  id  Int @id @default(autoincrement())
-  employeeId  Int
-  leaveTypeId Int
-  fromDate  String
-  toDate  String
-  totalDays Float
-  reason  String?
-  status  ApprovalStatus @default(PENDING)
-  createdBy Int
-  approverId  Int?
+  id                 Int            @id @default(autoincrement())
+  employeeId         Int
+  leaveTypeId        Int
+  fromDate           String
+  toDate             String
+  totalDays          Float
+  reason             String?
+  status             ApprovalStatus @default(PENDING)
+  createdBy          Int
+  approverId         Int?
   approverPositionId Int?
-  approvedAt  DateTime?
-  remarks String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  isHalfDay Boolean @default(false)
+  approvedAt         DateTime?
+  remarks            String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  isHalfDay          Boolean        @default(false)
 
-  employee  Employee  @relation("EmployeeLeaveRequests", fields:[employeeId], references:[id])
-  leaveType LeaveType @relation(fields:[leaveTypeId], references:[id])
-  creator   User  @relation("LeaveCreatedBy", fields:[createdBy], references:[id])
-  approver  User? @relation("LeaveApprovedBy", fields:[approverId], references:[id])
+  employee  Employee  @relation("EmployeeLeaveRequests", fields: [employeeId], references: [id])
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
+  creator   User      @relation("LeaveCreatedBy", fields: [createdBy], references: [id])
+  approver  User?     @relation("LeaveApprovedBy", fields: [approverId], references: [id])
 
   @@index([leaveTypeId])
 }
 
 model OfficialBusiness {
-  id  Int @id @default(autoincrement())
-  employeeId Int
-  workDate  String
-  startTime String?
-  endTime String?
-  purpose String
-  status  ApprovalStatus @default(PENDING)
-  createdBy  Int
-  approverId Int?
+  id                 Int            @id @default(autoincrement())
+  employeeId         Int
+  workDate           String
+  startTime          String?
+  endTime            String?
+  purpose            String
+  status             ApprovalStatus @default(PENDING)
+  createdBy          Int
+  approverId         Int?
   approverPositionId Int?
-  approvedAt DateTime?
-  remarks String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  approvedAt         DateTime?
+  remarks            String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 
-  employee Employee @relation("EmployeeOBRequests", fields:[employeeId], references:[id])
-  creator User @relation("OBCreatedBy", fields:[createdBy], references:[id])
-  approver User? @relation("OBApprovedBy", fields:[approverId], references:[id])
+  employee Employee @relation("EmployeeOBRequests", fields: [employeeId], references: [id])
+  creator  User     @relation("OBCreatedBy", fields: [createdBy], references: [id])
+  approver User?    @relation("OBApprovedBy", fields: [approverId], references: [id])
 }
 
 model LeaveBalance {
-  id  Int @id @default(autoincrement())
-  employeeId Int
-  leaveTypeId Int
-  totalDays Float  @default(0)
-  usedDays  Float  @default(0)
-  remainingDays Float @default(0)
-  year  Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id            Int       @id @default(autoincrement())
+  employeeId    Int
+  leaveTypeId   Int
+  totalDays     Float     @default(0)
+  usedDays      Float     @default(0)
+  remainingDays Float     @default(0)
+  year          Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
   employee  Employee  @relation(fields: [employeeId], references: [id])
-  leaveType LeaveType  @relation(fields: [leaveTypeId], references: [id])
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
 
   @@unique([employeeId, leaveTypeId, year])
 }
 
+model AttendanceCorrection {
+  id            Int            @id @default(autoincrement())
+  employeeId    Int
+  type          LogType
+  logDate       String
+  shiftId       Int?
+  correctedTime String?
+  reason        String?
+  status        ApprovalStatus @default(PENDING)
+  createdBy     Int
+  approverId    Int?
+  approvedAt    DateTime?
+  remarks       String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+  shift    Shift?   @relation(fields: [shiftId], references: [id])
+  user     User?    @relation(fields: [userId], references: [id])
+  userId   Int?
+
+  @@unique([employeeId, type, logDate])
+}
+
 model AuditLog {
-  id  Int @id @default(autoincrement())
-  userId  Int
-  action  String
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  action    String
   tableName String
   recordId  Int
   createdAt DateTime @default(now())
-  request Json?
+  request   Json?
   response  Json?
 }

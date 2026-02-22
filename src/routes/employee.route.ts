@@ -1,19 +1,22 @@
 import { Router } from "express";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { rbacMiddleware } from "../middleware/rbac.middleware";
-import { 
+import {
+    approveAttendanceCorrectionController,
     assignShiftToEmployeeCont,
-    createEmployeeController, 
-    createEmploymentStatusController, 
-    deleteEmployeeController, 
-    deleteEmploymentStatusController, 
-    getEmployeeByIdController, 
-    getEmployeesController, 
-    getEmployeeShiftByEmpIdController, 
-    getEmployeeShiftsController, 
-    getEmploymentStatusByIdController, 
-    getEmploymentStatusController, 
-    updateEmployeeController, 
+    createAttendanceCorrectionController,
+    createEmployeeController,
+    createEmploymentStatusController,
+    deleteEmployeeController,
+    deleteEmploymentStatusController,
+    getEmployeeByIdController,
+    getEmployeesController,
+    getEmployeeShiftByEmpIdController,
+    getEmployeeShiftsController,
+    getEmploymentStatusByIdController,
+    getEmploymentStatusController,
+    rejectAttendanceCorrectionController,
+    updateEmployeeController,
     updateEmploymentStatusController
 } from "../controllers/employee.controller";
 
@@ -36,5 +39,9 @@ router.get("/status/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmploymentSt
 router.post("/status", rbacMiddleware(["ADMIN"]), createEmploymentStatusController);
 router.patch("/status/:id", rbacMiddleware(["ADMIN"]), updateEmploymentStatusController);
 router.delete("/status/:id", rbacMiddleware(["ADMIN"]), deleteEmploymentStatusController);
+
+router.post("/attendance/correction", rbacMiddleware(["ADMIN", "EMPLOYEE"]), createAttendanceCorrectionController);
+router.post("/attendance/correction/approve", rbacMiddleware(["ADMIN"]), approveAttendanceCorrectionController);
+router.post("/attendance/correction/reject", rbacMiddleware(["ADMIN"]), rejectAttendanceCorrectionController);
 
 export default router;

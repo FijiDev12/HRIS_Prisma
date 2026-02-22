@@ -1,34 +1,39 @@
 import { Request, Response } from "express";
-import { 
-    assignShiftToEmployee, 
-    createEmployeeService, 
-    createEmploymentStatusService, 
-    deleteEmployeeService, 
-    deleteEmploymentStatusService, 
-    getEmployeeByIdService, 
-    getEmployeeShiftByEmpId, 
-    getEmployeeShifts, 
-    getEmployeesService, 
-    getEmploymentStatusByIdService, 
-    getEmploymentStatusService, 
-    updateEmployeeService, 
+import {
+    approveAttendanceCorrection,
+    assignShiftToEmployee,
+    createAttendanceCorrection,
+    createEmployeeService,
+    createEmploymentStatusService,
+    deleteEmployeeService,
+    deleteEmploymentStatusService,
+    getEmployeeByIdService,
+    getEmployeeShiftByEmpId,
+    getEmployeeShifts,
+    getEmployeesService,
+    getEmploymentStatusByIdService,
+    getEmploymentStatusService,
+    rejectAttendanceCorrection,
+    updateEmployeeService,
     updateEmploymentStatusService
 } from "../services/employee.services";
 
 export const createEmployeeController = async (req: Request, res: Response) => {
-    const { 
-        firstName, 
-        lastName, 
-        birthDate, 
-        address, 
-        email, 
-        contactNo, 
-        positionId, 
-        departmentId, 
-        siteId, 
-        employmentId, 
-        dateHired 
-    } = await req.body;
+    const {
+        firstName,
+        lastName,
+        birthDate,
+        address,
+        email,
+        contactNo,
+        positionId,
+        departmentId,
+        siteId,
+        employmentId,
+        dateHired
+    } = req.body;
+
+    const profilePhoto = req.file;
 
     const requiredFields = {
         firstName,
@@ -56,7 +61,7 @@ export const createEmployeeController = async (req: Request, res: Response) => {
     }
 
     try {
-        const result = await createEmployeeService(req.body);
+        const result = await createEmployeeService(req.body, profilePhoto?.buffer);
         res.status(201).json({
             code: 201,
             message: 'Success',
@@ -69,71 +74,79 @@ export const createEmployeeController = async (req: Request, res: Response) => {
         });
     }
 }
-
 export const updateEmployeeController = async (req: Request, res: Response) => {
-    const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
-        return res.status(400).json({
-            code: 400,
-            message: 'Bad Request'
-        });
-    }
-
-    const { 
-        firstName, 
-        lastName, 
-        birthDate, 
-        address, 
-        email, 
-        contactNo, 
-        positionId, 
-        departmentId, 
-        siteId, 
-        employmentId, 
-        dateHired 
-    } = await req.body;
-
-    const requiredFields = {
-        firstName,
-        lastName,
-        birthDate,
-        address,
-        email,
-        contactNo,
-        positionId,
-        departmentId,
-        siteId,
-        employmentId,
-        dateHired
-    };
-
-    const missingFields = Object.entries(requiredFields)
-        .filter(([key, value]) => value === undefined || value === null || value === '')
-        .map(([key]) => key);
-
-    if (missingFields.length > 0) {
-        return res.status(400).json({
-            code: 400,
-            message: 'Bad Request'
-        });
-    }
-
     try {
-        const result = await updateEmployeeService(Number(id), req.body);
-        res.status(200).json({
+        const id = Number(req.params.id);
+
+        if (!id || isNaN(id)) {
+            return res.status(400).json({
+                code: 400,
+                message: "Invalid Employee ID",
+            });
+        }
+
+        const {
+            firstName,
+            lastName,
+            birthDate,
+            address,
+            email,
+            contactNo,
+            positionId,
+            departmentId,
+            siteId,
+            employmentId,
+            dateHired,
+        } = req.body;
+
+        const profilePhoto = req.file?.buffer;
+
+        const requiredFields = {
+            firstName,
+            lastName,
+            birthDate,
+            address,
+            email,
+            contactNo,
+            positionId,
+            departmentId,
+            siteId,
+            employmentId,
+            dateHired,
+        };
+
+        const missingFields = Object.entries(requiredFields)
+            .filter(([_, value]) => value === undefined || value === null || value === "")
+            .map(([key]) => key);
+
+        if (missingFields.length > 0) {
+            return res.status(400).json({
+                code: 400,
+                message: `Missing fields: ${missingFields.join(", ")}`,
+            });
+        }
+
+        const result = await updateEmployeeService(
+            id,
+            profilePhoto,
+            req.body
+        );
+
+        return res.status(200).json({
             code: 200,
-            message: 'Success',
-            data: result
+            message: "Employee updated successfully",
+            data: result,
         });
+
     } catch (error: any) {
-        res.status(500).json({
+        return res.status(500).json({
             code: 500,
-            message: error.message || 'Internal Server Error'
+            message: error.message || "Internal Server Error",
         });
     }
-}
+};
 
-export const getEmployeesController = async (_:Request, res: Response) => {
+export const getEmployeesController = async (_: Request, res: Response) => {
     try {
         const result = await getEmployeesService();
         res.status(200).json({
@@ -151,13 +164,13 @@ export const getEmployeesController = async (_:Request, res: Response) => {
 
 export const getEmployeeByIdController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
         });
     }
-    
+
     try {
         const result = await getEmployeeByIdService(Number(id));
         res.status(200).json({
@@ -175,7 +188,7 @@ export const getEmployeeByIdController = async (req: Request, res: Response) => 
 
 export const deleteEmployeeController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -198,7 +211,7 @@ export const deleteEmployeeController = async (req: Request, res: Response) => {
 
 export const assignShiftToEmployeeCont = async (req: Request, res: Response) => {
     const { employeeId, shiftId, startDate, endDate } = await req.body;
-    if(!employeeId || !shiftId || !startDate || !endDate) {
+    if (!employeeId || !shiftId || !startDate || !endDate) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -220,7 +233,7 @@ export const assignShiftToEmployeeCont = async (req: Request, res: Response) => 
     }
 }
 
-export const getEmployeeShiftsController = async (_:Request, res: Response) => {
+export const getEmployeeShiftsController = async (_: Request, res: Response) => {
     try {
         const result = await getEmployeeShifts();
         res.status(200).json({
@@ -238,7 +251,7 @@ export const getEmployeeShiftsController = async (_:Request, res: Response) => {
 
 export const getEmployeeShiftByEmpIdController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -286,7 +299,7 @@ export const createEmploymentStatusController = async (req: Request, res: Respon
 
 export const updateEmploymentStatusController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -317,7 +330,7 @@ export const updateEmploymentStatusController = async (req: Request, res: Respon
     }
 }
 
-export const getEmploymentStatusController = async (_:Request, res: Response) => {
+export const getEmploymentStatusController = async (_: Request, res: Response) => {
     try {
         const result = await getEmploymentStatusService();
         res.status(200).json({
@@ -335,13 +348,13 @@ export const getEmploymentStatusController = async (_:Request, res: Response) =>
 
 export const getEmploymentStatusByIdController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
         });
     }
-    
+
     try {
         const result = await getEmploymentStatusByIdService(Number(id));
         res.status(200).json({
@@ -359,7 +372,7 @@ export const getEmploymentStatusByIdController = async (req: Request, res: Respo
 
 export const deleteEmploymentStatusController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -379,3 +392,57 @@ export const deleteEmploymentStatusController = async (req: Request, res: Respon
         });
     }
 }
+
+export const createAttendanceCorrectionController = async (req: Request, res: Response) => {
+    const { employeeNo, type, logDate, shiftId, correctedTime, reason, createdBy } = req.body;
+
+    if (!employeeNo || !type || !logDate || !createdBy) {
+        return res.status(400).json({ code: 400, message: "Missing required fields" });
+    }
+
+    try {
+        const result = await createAttendanceCorrection(
+            Number(employeeNo),
+            type,
+            logDate,
+            shiftId ? Number(shiftId) : null,
+            correctedTime ?? null,
+            reason ?? "",
+            Number(createdBy)
+        );
+
+        res.status(201).json({ code: 201, message: "Attendance correction created", data: result });
+    } catch (error: any) {
+        res.status(500).json({ code: 500, message: error.message || "Internal Server Error" });
+    }
+};
+
+export const approveAttendanceCorrectionController = async (req: Request, res: Response) => {
+    const { correctionId, approverId, remarks } = req.body;
+
+    if (!correctionId || !approverId) {
+        return res.status(400).json({ code: 400, message: "Missing required fields" });
+    }
+
+    try {
+        const result = await approveAttendanceCorrection(Number(correctionId), Number(approverId), remarks);
+        res.status(200).json({ code: 200, message: "Attendance correction approved", data: result });
+    } catch (error: any) {
+        res.status(500).json({ code: 500, message: error.message || "Internal Server Error" });
+    }
+};
+
+export const rejectAttendanceCorrectionController = async (req: Request, res: Response) => {
+    const { correctionId, approverId, remarks } = req.body;
+
+    if (!correctionId || !approverId) {
+        return res.status(400).json({ code: 400, message: "Missing required fields" });
+    }
+
+    try {
+        const result = await rejectAttendanceCorrection(Number(correctionId), Number(approverId), remarks);
+        res.status(200).json({ code: 200, message: "Attendance correction rejected", data: result });
+    } catch (error: any) {
+        res.status(500).json({ code: 500, message: error.message || "Internal Server Error" });
+    }
+};

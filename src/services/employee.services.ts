@@ -18,13 +18,18 @@ interface EmployeeType {
     address: string,
     email: string,
     contactNo: string,
-    profilePhoto?: string,
     positionId: number,
     departmentId: number,
     siteId: number,
     employmentId: number,
     dateHired: string | Date,
     userId?: number;
+}
+
+interface UpdateEmployeeParams {
+    id: number;
+    data: EmployeeType;
+    profilePhoto?: Buffer;
 }
 
 export async function createEmploymentStatusService(data: EmploymentType) {
@@ -74,13 +79,17 @@ function generateEmployeeNo(lastEmployeeId?: number) {
     return Number(`${year}${nextSeq}`);
 }
 
-export async function createEmployeeService(data: EmployeeType) {
+export async function createEmployeeService(data: EmployeeType, profilePhoto?: Buffer) {
     const lastEmployee = await prisma.employee.findFirst({
         orderBy: { id: 'desc' },
         select: { id: true },
     });
 
     const employeeNo = generateEmployeeNo(lastEmployee?.id);
+
+    const base64Image = profilePhoto
+        ? profilePhoto.toString("base64")
+        : null;
 
     const result = await prisma.employee.create({
         data: {
@@ -96,7 +105,7 @@ export async function createEmployeeService(data: EmployeeType) {
             address: data.address,
             email: data.email,
             contactNo: data.contactNo,
-            profilePhoto: data.profilePhoto,
+            profilePhoto: base64Image,
             positionId: data.positionId,
             departmentId: data.departmentId,
             siteId: data.siteId,
@@ -125,32 +134,48 @@ export async function getEmployeeByIdService(id: number) {
     return result;
 }
 
-export async function updateEmployeeService(id: number, data: Partial<EmployeeType>) {
+export async function updateEmployeeService(
+    id: number,
+    profilePhoto?: Buffer,
+    data?: Partial<EmployeeType>
+) {
+    if (!data) throw new Error("No data provided");
+
     const updateEmployeeData: any = {
-        ...(data.firstName && { firstName: data.firstName }),
+        ...(data.firstName !== undefined && { firstName: data.firstName }),
         ...(data.middleName !== undefined && { middleName: data.middleName }),
-        ...(data.lastName && { lastName: data.lastName }),
+        ...(data.lastName !== undefined && { lastName: data.lastName }),
         ...(data.suffix !== undefined && { suffix: data.suffix }),
         ...(data.gender !== undefined && { gender: data.gender }),
         ...(data.birthDate !== undefined && { birthDate: new Date(data.birthDate) }),
         ...(data.civilStatus !== undefined && { civilStatus: data.civilStatus }),
         ...(data.nationality !== undefined && { nationality: data.nationality }),
         ...(data.address !== undefined && { address: data.address }),
+        ...(data.email !== undefined && { email: data.email }),
         ...(data.contactNo !== undefined && { contactNo: data.contactNo }),
-        ...(data.profilePhoto !== undefined && { profilePhoto: data.profilePhoto }),
         ...(data.positionId !== undefined && { positionId: data.positionId }),
         ...(data.departmentId !== undefined && { departmentId: data.departmentId }),
         ...(data.siteId !== undefined && { siteId: data.siteId }),
         ...(data.employmentId !== undefined && { employmentId: data.employmentId }),
         ...(data.userId !== undefined && { userId: data.userId }),
+        ...(data.dateHired !== undefined && { dateHired: new Date(data.dateHired) }),
     };
+
+    if (profilePhoto) {
+        updateEmployeeData.profilePhoto = profilePhoto.toString("base64");
+    }
 
     const result = await prisma.employee.update({
         where: { id },
-        data: updateEmployeeData
+        data: updateEmployeeData,
     });
-    
-    return result;
+
+    return {
+        ...result,
+        profilePhoto: result.profilePhoto
+            ? `data:image/jpeg;base64,${result.profilePhoto}`
+            : null,
+    };
 }
 
 export async function deleteEmployeeService(id: number) {
@@ -199,6 +224,124 @@ export async function getEmployeeShiftByEmpId(id: number) {
     const result = await prisma.employeeShift.findMany({
         where: { employeeId: id },
         include: { shift: true }
+    });
+
+    return result;
+}
+
+export async function createAttendanceCorrection(
+    employeeNo: number,
+    type: "IN" | "OUT",
+    logDate: string,
+    shiftId: number | null,
+    correctedTime: string | null,
+    reason: string,
+    createdBy: number
+) {
+    const employee = await prisma.employee.findUnique({
+        where: { employeeNo },
+    });
+
+    if (!employee) throw new Error("Employee not found");
+
+    const existing = await prisma.attendanceCorrection.findFirst({
+        where: { employeeId: employee.id, type, logDate },
+    });
+
+    if (existing) {
+        throw new Error(`${type} correction already exists for ${logDate}`);
+    }
+
+    const result = await prisma.attendanceCorrection.create({
+        data: {
+            employeeId: employee.id,
+            type,
+            logDate,
+            shiftId: shiftId ?? undefined,
+            correctedTime: correctedTime ?? undefined,
+            reason,
+            createdBy,
+            status: "PENDING",
+        },
+    });
+
+    return result;
+}
+
+export async function approveAttendanceCorrection(
+    correctionId: number,
+    approverId: number,
+    remarks?: string
+) {
+    const correction = await prisma.attendanceCorrection.findUnique({
+        where: { id: correctionId },
+    });
+
+    if (!correction) throw new Error("Attendance correction not found");
+    if (correction.status !== "PENDING")
+        throw new Error("Only pending corrections can be approved");
+
+    const updatedCorrection = await prisma.attendanceCorrection.update({
+        where: { id: correctionId },
+        data: {
+            status: "APPROVED",
+            approverId,
+            approvedAt: new Date(),
+            remarks,
+        },
+    });
+
+    const type = correction.type === "IN" ? "IN" : "OUT";
+    const correctedDateTime = correction.correctedTime
+        ? new Date(`${correction.logDate}T${correction.correctedTime}:00`)
+        : undefined;
+
+    const existingTimeLog = await prisma.timeLog.findFirst({
+        where: { employeeId: correction.employeeId, logDate: correction.logDate, type },
+    });
+
+    if (existingTimeLog) {
+        await prisma.timeLog.update({
+            where: { id: existingTimeLog.id },
+            data: {
+                loggedAt: correctedDateTime ?? existingTimeLog.loggedAt,
+            },
+        });
+    } else {
+        await prisma.timeLog.create({
+            data: {
+                employeeId: correction.employeeId,
+                logDate: correction.logDate,
+                type,
+                loggedAt: correctedDateTime ?? new Date(),
+            },
+        });
+    }
+
+    return updatedCorrection;
+}
+
+export async function rejectAttendanceCorrection(
+    correctionId: number,
+    approverId: number,
+    remarks?: string
+) {
+    const correction = await prisma.attendanceCorrection.findUnique({
+        where: { id: correctionId },
+    });
+
+    if (!correction) throw new Error("Attendance correction not found");
+    if (correction.status !== "PENDING")
+        throw new Error("Only pending corrections can be rejected");
+
+    const result = await prisma.attendanceCorrection.update({
+        where: { id: correctionId },
+        data: {
+            status: "REJECTED",
+            approverId,
+            approvedAt: new Date(),
+            remarks,
+        },
     });
 
     return result;
