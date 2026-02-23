@@ -61,6 +61,8 @@ export const createEmployeeController = async (req: Request, res: Response) => {
     }
 
     try {
+        console.log(req.body);
+        console.log(profilePhoto?.buffer);
         const result = await createEmployeeService(req.body, profilePhoto?.buffer);
         res.status(201).json({
             code: 201,

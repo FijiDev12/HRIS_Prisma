@@ -19,6 +19,9 @@ import {
     updateEmployeeController,
     updateEmploymentStatusController
 } from "../controllers/employee.controller";
+import multer from "multer";
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 
@@ -26,8 +29,8 @@ router.use(authMiddleware);
 
 router.get("/", rbacMiddleware(["ADMIN"]), getEmployeesController);
 router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmployeeByIdController);
-router.post("/", rbacMiddleware(["ADMIN"]), createEmployeeController);
-router.patch("/:id", rbacMiddleware(["ADMIN"]), updateEmployeeController);
+router.post("/", rbacMiddleware(["ADMIN"]), upload.single("profilePhoto"), createEmployeeController);
+router.patch("/:id", rbacMiddleware(["ADMIN"]), upload.single("profilePhoto"), updateEmployeeController);
 router.delete("/:id", rbacMiddleware(["ADMIN"]), deleteEmployeeController);
 
 router.post("/assign/schedule", rbacMiddleware(["ADMIN"]), assignShiftToEmployeeCont);

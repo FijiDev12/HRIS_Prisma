@@ -80,6 +80,14 @@ function generateEmployeeNo(lastEmployeeId?: number) {
 }
 
 export async function createEmployeeService(data: EmployeeType, profilePhoto?: Buffer) {
+    const existingEmail = await prisma.employee.findUnique({
+        where: { email: data.email },
+    });
+    console.log("existingEmail:", existingEmail);
+    if (existingEmail) {
+        throw new Error("Email already exists");
+    }
+
     const lastEmployee = await prisma.employee.findFirst({
         orderBy: { id: 'desc' },
         select: { id: true },
@@ -105,13 +113,13 @@ export async function createEmployeeService(data: EmployeeType, profilePhoto?: B
             address: data.address,
             email: data.email,
             contactNo: data.contactNo,
-            profilePhoto: base64Image,
-            positionId: data.positionId,
-            departmentId: data.departmentId,
-            siteId: data.siteId,
-            employmentId: data.employmentId,
+            positionId: Number(data.positionId),
+            departmentId: Number(data.departmentId),
+            siteId: Number(data.siteId),
+            employmentId: Number(data.employmentId),
             dateHired: new Date(data.dateHired),
-            userId: data.userId,
+            userId: Number(data.userId),
+            ...(base64Image && { profilePhoto: base64Image }),
         },
     });
 
