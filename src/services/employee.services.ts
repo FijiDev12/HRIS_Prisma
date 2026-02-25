@@ -149,6 +149,16 @@ export async function updateEmployeeService(
 ) {
     if (!data) throw new Error("No data provided");
 
+    const check = await prisma.employee.findUnique({
+        where: { id: Number(id) },
+    });
+
+    console.log("Found employee:", check);
+
+    if (!check) {
+        throw new Error("Employee not found");
+    }
+
     const updateEmployeeData: any = {
         ...(data.firstName !== undefined && { firstName: data.firstName }),
         ...(data.middleName !== undefined && { middleName: data.middleName }),
@@ -161,11 +171,11 @@ export async function updateEmployeeService(
         ...(data.address !== undefined && { address: data.address }),
         ...(data.email !== undefined && { email: data.email }),
         ...(data.contactNo !== undefined && { contactNo: data.contactNo }),
-        ...(data.positionId !== undefined && { positionId: data.positionId }),
-        ...(data.departmentId !== undefined && { departmentId: data.departmentId }),
-        ...(data.siteId !== undefined && { siteId: data.siteId }),
-        ...(data.employmentId !== undefined && { employmentId: data.employmentId }),
-        ...(data.userId !== undefined && { userId: data.userId }),
+        ...(data.positionId !== undefined && { positionId: Number(data.positionId) }),
+        ...(data.departmentId !== undefined && { departmentId: Number(data.departmentId) }),
+        ...(data.siteId !== undefined && { siteId: Number(data.siteId) }),
+        ...(data.employmentId !== undefined && { employmentId: Number(data.employmentId) }),
+        ...(data.userId !== undefined && { userId: Number(data.userId) }),
         ...(data.dateHired !== undefined && { dateHired: new Date(data.dateHired) }),
     };
 
@@ -174,7 +184,7 @@ export async function updateEmployeeService(
     }
 
     const result = await prisma.employee.update({
-        where: { id },
+        where: { id: Number(id) },
         data: updateEmployeeData,
     });
 

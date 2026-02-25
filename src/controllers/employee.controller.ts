@@ -101,7 +101,7 @@ export const updateEmployeeController = async (req: Request, res: Response) => {
             dateHired,
         } = req.body;
 
-        const profilePhoto = req.file?.buffer;
+        const profilePhoto = req.file;
 
         const requiredFields = {
             firstName,
@@ -130,7 +130,7 @@ export const updateEmployeeController = async (req: Request, res: Response) => {
 
         const result = await updateEmployeeService(
             id,
-            profilePhoto,
+            profilePhoto?.buffer,
             req.body
         );
 
