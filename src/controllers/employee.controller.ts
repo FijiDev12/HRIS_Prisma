@@ -7,6 +7,8 @@ import {
     createEmploymentStatusService,
     deleteEmployeeService,
     deleteEmploymentStatusService,
+    getAttendanceCorrectionByIdService,
+    getAttendanceCorrectionService,
     getEmployeeByIdService,
     getEmployeeShiftByEmpId,
     getEmployeeShifts,
@@ -448,3 +450,43 @@ export const rejectAttendanceCorrectionController = async (req: Request, res: Re
         res.status(500).json({ code: 500, message: error.message || "Internal Server Error" });
     }
 };
+
+export const getAttendanceCorrectionController = async (_: Request, res: Response) => {
+    try {
+        const result = await getAttendanceCorrectionService();
+        res.status(200).json({
+            code: 200,
+            message: 'Success',
+            data: result
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            code: 500,
+            message: error.message || 'Internal Server Error'
+        });
+    }
+}
+
+export const getAttendanceCorrectionByIdController = async (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+    if (!id || isNaN(id)) {
+        return res.status(400).json({
+            code: 400,
+            message: 'Bad Request'
+        });
+    }
+
+    try {
+        const result = await getAttendanceCorrectionByIdService(Number(id));
+        res.status(200).json({
+            code: 200,
+            message: 'Success',
+            data: result
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            code: 500,
+            message: error.message || 'Internal Server Error'
+        });
+    }
+}

@@ -9,6 +9,8 @@ import {
     createEmploymentStatusController,
     deleteEmployeeController,
     deleteEmploymentStatusController,
+    getAttendanceCorrectionByIdController,
+    getAttendanceCorrectionController,
     getEmployeeByIdController,
     getEmployeesController,
     getEmployeeShiftByEmpIdController,
@@ -46,5 +48,7 @@ router.delete("/status/:id", rbacMiddleware(["ADMIN"]), deleteEmploymentStatusCo
 router.post("/attendance/correction", rbacMiddleware(["ADMIN", "EMPLOYEE"]), createAttendanceCorrectionController);
 router.post("/attendance/correction/approve", rbacMiddleware(["ADMIN"]), approveAttendanceCorrectionController);
 router.post("/attendance/correction/reject", rbacMiddleware(["ADMIN"]), rejectAttendanceCorrectionController);
+router.get("/attendance/correction", rbacMiddleware(["ADMIN"]), getAttendanceCorrectionController);
+router.get("/attendance/correction/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getAttendanceCorrectionByIdController);
 
 export default router;
