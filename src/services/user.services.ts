@@ -9,7 +9,12 @@ interface UserType {
 }
 
 export async function createUserService(data: UserType) {
-    const result = await prisma.user.create({ data });
+    const result = await prisma.user.create({
+        data: {
+            ...data,
+            password: await hashPassword(data.password)
+        }
+    });
 
     return result;
 }
@@ -33,7 +38,7 @@ export async function getUserByIdService(id: number) {
 
 export async function updateUserService(id: number, data: Partial<UserType>) {
     const updateUserData: any = { ...data }
-    if(data.password) {
+    if (data.password) {
         updateUserData.password = await hashPassword(data.password)
     }
     const result = await prisma.user.update({
