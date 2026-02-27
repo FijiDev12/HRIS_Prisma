@@ -376,6 +376,18 @@ export async function getAttendanceCorrectionService() {
     return result;
 }
 
+export async function getAttendanceCorrectionByEmployeeIdService(employeeId: number) {
+    const result = await prisma.attendanceCorrection.findMany({
+        where: { employeeId },
+        include: {
+            employee: true,
+            shift: true,
+        }
+    });
+
+    return result;
+}
+
 export async function getAttendanceCorrectionByIdService(id: number) {
     const result = await prisma.attendanceCorrection.findUnique({
         where: { id },

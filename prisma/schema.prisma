@@ -98,7 +98,7 @@ model User {
   deletedAt  DateTime?
 
   employee              Employee?
-  role                  Role                   @relation(fields: [roleId], references: [id])
+  role                  Role                   @relation(fields: [roleId], references: [id], onDelete: Restrict)
   // createdRoles Role[] @relation("RoleCreator")
   createdOTs            OvertimeRequest[]      @relation("OTCreatedBy")
   approvedOTs           OvertimeRequest[]      @relation("OTApprovedBy")
