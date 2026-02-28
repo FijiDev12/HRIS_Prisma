@@ -24,7 +24,7 @@ async function isPayrollLocked(employeeId: number, workDate: string) {
             workDate,
             payroll: {
                 is: {
-                    status: "POSTED",
+                    status: "APPROVED",
                 },
             },
         },

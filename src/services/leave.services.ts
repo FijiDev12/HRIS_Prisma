@@ -105,14 +105,14 @@ export async function createLeaveReqService(data: LeaveRequestType) {
 
         const lockedPeriod = await tx.payrollPeriod.findFirst({
             where: {
-                status: PayrollStatus.POSTED,
+                status: PayrollStatus.APPROVED,
                 startDate: { lte: new Date(toDate) },
                 endDate: { gte: new Date(fromDate) },
             },
         });
 
         if (lockedPeriod) {
-            throw new Error("Cannot file leave. Payroll is already posted for this period.");
+            throw new Error("Cannot file leave. Payroll is already approved for this period.");
         }
 
         const overlapping = await tx.leaveRequest.findFirst({
@@ -256,7 +256,7 @@ export async function approveLeaveRequestService(
 
         const lockedPeriod = await tx.payrollPeriod.findFirst({
             where: {
-                status: PayrollStatus.POSTED,
+                status: PayrollStatus.APPROVED,
                 startDate: { lte: new Date(leave.toDate) },
                 endDate: { gte: new Date(leave.fromDate) },
             },
