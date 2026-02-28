@@ -105,8 +105,8 @@ export const approveObRequestController = async (req: Request, res: Response) =>
         });
     }
 
-    const { approverId, remarks } = await req.body;
-    if (!approverId || !remarks) {
+    const { approverId, remarks, workDate, employeeId } = await req.body;
+    if (!approverId || !remarks || !workDate || !employeeId) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'

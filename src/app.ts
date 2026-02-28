@@ -18,6 +18,8 @@ import otRoutes from './routes/ot.route';
 import scheduleRoutes from './routes/shiftSched.route';
 import authRoutes from './routes/auth.route';
 import leaveRoutes from './routes/leave.route';
+import govContributionRoutes from "./routes/gov.contribution.route";
+import payrollRoutes from "./routes/payroll.route";
 
 const swaggerFile = path.join(__dirname, "../docs/swagger.json");
 const swaggerData = JSON.parse(fs.readFileSync(swaggerFile, "utf-8"));
@@ -52,5 +54,7 @@ app.use("/api/v1/request/ot", otRoutes);
 app.use("/api/v1/schedule", scheduleRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/leave", leaveRoutes);
+app.use("/api/v1/gov/contribution", govContributionRoutes);
+app.use("/api/v1/payroll", payrollRoutes);
 
 export default app;

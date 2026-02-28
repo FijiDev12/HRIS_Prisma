@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { rbacMiddleware } from "../middleware/rbac.middleware";
-import { 
+import {
     createShiftController,
     deleteShiftController,
-    getShiftByIdController, 
-    getShiftsController, 
+    getShiftByIdController,
+    getShiftsController,
     updateShiftController
 } from "../controllers/shiftSched.controller";
 
@@ -13,10 +13,10 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/", rbacMiddleware(["ADMIN"]), getShiftsController);
-router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getShiftByIdController);
-router.post("/", rbacMiddleware(["ADMIN"]), createShiftController);
-router.patch("/:id", rbacMiddleware(["ADMIN"]), updateShiftController);
-router.delete("/:id", rbacMiddleware(["ADMIN"]), deleteShiftController);
+router.get("/", rbacMiddleware(["ADMIN", "EXECUTIVE", "HR"]), getShiftsController);
+router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE", "GUEST", "EXECUTIVE", "HR"]), getShiftByIdController);
+router.post("/", rbacMiddleware(["ADMIN", "HR"]), createShiftController);
+router.patch("/:id", rbacMiddleware(["ADMIN", "HR"]), updateShiftController);
+router.delete("/:id", rbacMiddleware(["ADMIN", "HR"]), deleteShiftController);
 
 export default router;

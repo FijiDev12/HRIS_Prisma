@@ -30,27 +30,27 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/", rbacMiddleware(["ADMIN"]), getEmployeesController);
-router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmployeeByIdController);
-router.post("/", rbacMiddleware(["ADMIN"]), upload.single("profilePhoto"), createEmployeeController);
-router.patch("/:id", rbacMiddleware(["ADMIN"]), upload.single("profilePhoto"), updateEmployeeController);
-router.delete("/:id", rbacMiddleware(["ADMIN"]), deleteEmployeeController);
+router.get("/", rbacMiddleware(["ADMIN", "HR"]), getEmployeesController);
+router.get("/:id", rbacMiddleware(["ADMIN", "HR", "EMPLOYEE", "GUEST", "EXECUTIVE"]), getEmployeeByIdController);
+router.post("/", rbacMiddleware(["ADMIN", "HR", "EXECUTIVE", "GUEST", "EMPLOYEE"]), upload.single("profilePhoto"), createEmployeeController);
+router.patch("/:id", rbacMiddleware(["ADMIN", "HR", "EXECUTIVE", "GUEST", "EMPLOYEE"]), upload.single("profilePhoto"), updateEmployeeController);
+router.delete("/:id", rbacMiddleware(["ADMIN", "HR", "EXECUTIVE", "GUEST"]), deleteEmployeeController);
 
-router.post("/assign/schedule", rbacMiddleware(["ADMIN"]), assignShiftToEmployeeCont);
-router.get("/assign/schedule", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmployeeShiftsController);
-router.get("/assign/schedule/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmployeeShiftByEmpIdController);
+router.post("/assign/schedule", rbacMiddleware(["ADMIN", "HR"]), assignShiftToEmployeeCont);
+router.get("/assign/schedule", rbacMiddleware(["ADMIN", "HR", "EMPLOYEE", "GUEST", "EXECUTIVE"]), getEmployeeShiftsController);
+router.get("/assign/schedule/:id", rbacMiddleware(["ADMIN", "HR", "EMPLOYEE", "GUEST", "EXECUTIVE"]), getEmployeeShiftByEmpIdController);
 
-router.get("/status", rbacMiddleware(["ADMIN"]), getEmploymentStatusController);
-router.get("/status/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getEmploymentStatusByIdController);
-router.post("/status", rbacMiddleware(["ADMIN"]), createEmploymentStatusController);
-router.patch("/status/:id", rbacMiddleware(["ADMIN"]), updateEmploymentStatusController);
-router.delete("/status/:id", rbacMiddleware(["ADMIN"]), deleteEmploymentStatusController);
+router.get("/status", rbacMiddleware(["ADMIN", "HR", "EXECUTIVE", "GUEST", "EMPLOYEE"]), getEmploymentStatusController);
+router.get("/status/:id", rbacMiddleware(["ADMIN", "HR", "EMPLOYEE", "GUEST", "EXECUTIVE"]), getEmploymentStatusByIdController);
+router.post("/status", rbacMiddleware(["ADMIN", "HR", "EXECUTIVE"]), createEmploymentStatusController);
+router.patch("/status/:id", rbacMiddleware(["ADMIN", "HR", "EXECUTIVE"]), updateEmploymentStatusController);
+router.delete("/status/:id", rbacMiddleware(["ADMIN", "HR", "EXECUTIVE"]), deleteEmploymentStatusController);
 
-router.post("/attendance/correction", rbacMiddleware(["ADMIN", "EMPLOYEE"]), createAttendanceCorrectionController);
-router.post("/attendance/correction/approve", rbacMiddleware(["ADMIN"]), approveAttendanceCorrectionController);
-router.post("/attendance/correction/reject", rbacMiddleware(["ADMIN"]), rejectAttendanceCorrectionController);
-router.get("/attendance/correction", rbacMiddleware(["ADMIN"]), getAttendanceCorrectionController);
-router.get("/attendance/correction/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getAttendanceCorrectionByIdController);
-router.get("/attendance/correction/employee/:employeeId", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getAttendanceCorrectionByEmployeeIdController);
+router.post("/attendance/correction", rbacMiddleware(["ADMIN", "HR", "EMPLOYEE", "GUEST", "EXECUTIVE"]), createAttendanceCorrectionController);
+router.post("/attendance/correction/approve", rbacMiddleware(["ADMIN", "HR"]), approveAttendanceCorrectionController);
+router.post("/attendance/correction/reject", rbacMiddleware(["ADMIN", "HR"]), rejectAttendanceCorrectionController);
+router.get("/attendance/correction", rbacMiddleware(["ADMIN", "HR", "EXECUTIVE"]), getAttendanceCorrectionController);
+router.get("/attendance/correction/:id", rbacMiddleware(["ADMIN", "HR", "EMPLOYEE", "GUEST", "EXECUTIVE"]), getAttendanceCorrectionByIdController);
+router.get("/attendance/correction/employee/:employeeId", rbacMiddleware(["ADMIN", "HR", "EMPLOYEE", "GUEST", "EXECUTIVE"]), getAttendanceCorrectionByEmployeeIdController);
 
 export default router;

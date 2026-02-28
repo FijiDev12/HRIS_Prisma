@@ -1,4 +1,5 @@
 import { prisma } from "../util/prisma.util";
+import { PayrollStatus } from "../../generated/prisma/enums";
 
 interface LeaveType {
     leaveName: string;
@@ -101,16 +102,25 @@ export async function createLeaveReqService(data: LeaveRequestType) {
     }
 
     return await prisma.$transaction(async (tx) => {
+
+        const lockedPeriod = await tx.payrollPeriod.findFirst({
+            where: {
+                status: PayrollStatus.POSTED,
+                startDate: { lte: new Date(toDate) },
+                endDate: { gte: new Date(fromDate) },
+            },
+        });
+
+        if (lockedPeriod) {
+            throw new Error("Cannot file leave. Payroll is already posted for this period.");
+        }
+
         const overlapping = await tx.leaveRequest.findFirst({
             where: {
                 employeeId,
                 status: { not: "REJECTED" },
-                OR: [
-                    {
-                        fromDate: { lte: toDate },
-                        toDate: { gte: fromDate },
-                    },
-                ],
+                fromDate: { lte: toDate },
+                toDate: { gte: fromDate },
             },
         });
 
@@ -126,12 +136,14 @@ export async function createLeaveReqService(data: LeaveRequestType) {
                 },
             },
         });
-        const holidayDates = holidays.map((h: any) => new Date(h.date));
+
+        const holidayDates = holidays.map((h) => new Date(h.holidayDate));
 
         const restDayRecords = await tx.restDay.findMany({
             where: { employeeId },
         });
-        const restDays = restDayRecords.map(r => r.dayOfWeek);
+
+        const restDays = restDayRecords.map((r) => r.dayOfWeek);
 
         const totalDays = calculateWorkingDays(
             new Date(fromDate),
@@ -155,7 +167,7 @@ export async function createLeaveReqService(data: LeaveRequestType) {
         });
 
         if (!leaveBalance) {
-            throw new Error("Leave balance not found for this employee and leave type.");
+            throw new Error("Leave balance not found.");
         }
 
         if (leaveBalance.remainingDays < totalDays) {
@@ -225,48 +237,76 @@ export async function getLeaveRequestByEmpIdService(employeeId: number) {
     return result;
 }
 
-export async function approveLeaveRequestService(id: number, data: Partial<LeaveApproveType>) {
-    const updateData = {
-        ...data,
-        status: "APPROVED" as const,
-        approvedAt: new Date(),
-    };
+export async function approveLeaveRequestService(
+    id: number,
+    data: Partial<LeaveApproveType>
+) {
+    return prisma.$transaction(async (tx) => {
+        const leave = await tx.leaveRequest.findUnique({
+            where: { id },
+        });
 
-    const leave = await prisma.leaveRequest.update({
-        where: { id },
-        data: updateData
-    });
-
-    const year = new Date().getFullYear();
-    const balance = await prisma.leaveBalance.findUnique({
-        where: {
-            employeeId_leaveTypeId_year: {
-                employeeId: leave.employeeId,
-                leaveTypeId: leave.leaveTypeId,
-                year
-            }
+        if (!leave) {
+            throw new Error("Leave request not found");
         }
-    });
 
-    if (balance) {
-        const usedDays = balance.usedDays + leave.totalDays;
-        await prisma.leaveBalance.update({
-            where: { id: balance.id },
-            data: { usedDays, remainingDays: balance.totalDays - usedDays }
+        if (leave.status === "APPROVED") {
+            throw new Error("Leave request already approved");
+        }
+
+        const lockedPeriod = await tx.payrollPeriod.findFirst({
+            where: {
+                status: PayrollStatus.POSTED,
+                startDate: { lte: new Date(leave.toDate) },
+                endDate: { gte: new Date(leave.fromDate) },
+            },
         });
-    } else {
-        await prisma.leaveBalance.create({
+
+        if (lockedPeriod) {
+            throw new Error("Cannot approve leave. Payroll is already posted for this period.");
+        }
+
+        const approvedLeave = await tx.leaveRequest.update({
+            where: { id },
             data: {
-                employeeId: leave.employeeId,
-                leaveTypeId: leave.leaveTypeId,
-                totalDays: leave.totalDays,
-                usedDays: leave.totalDays,
-                remainingDays: 0,
-                year
-            }
+                ...data,
+                status: "APPROVED",
+                approvedAt: new Date(),
+            },
         });
-    }
-    return leave;
+
+        const year = new Date().getFullYear();
+
+        const balance = await tx.leaveBalance.findUnique({
+            where: {
+                employeeId_leaveTypeId_year: {
+                    employeeId: approvedLeave.employeeId,
+                    leaveTypeId: approvedLeave.leaveTypeId,
+                    year,
+                },
+            },
+        });
+
+        if (!balance) {
+            throw new Error("Leave balance not found.");
+        }
+
+        if (balance.remainingDays < approvedLeave.totalDays) {
+            throw new Error("Insufficient leave balance.");
+        }
+
+        const usedDays = balance.usedDays + approvedLeave.totalDays;
+
+        await tx.leaveBalance.update({
+            where: { id: balance.id },
+            data: {
+                usedDays,
+                remainingDays: balance.totalDays - usedDays,
+            },
+        });
+
+        return approvedLeave;
+    });
 }
 
 export async function rejectLeaveRequestService(id: number, data: Partial<LeaveApproveType>) {

@@ -24,12 +24,7 @@ interface EmployeeType {
     employmentId: number,
     dateHired: string | Date,
     userId?: number;
-}
-
-interface UpdateEmployeeParams {
-    id: number;
-    data: EmployeeType;
-    profilePhoto?: Buffer;
+    basicSalary?: number;
 }
 
 export async function createEmploymentStatusService(data: EmploymentType) {
@@ -119,6 +114,7 @@ export async function createEmployeeService(data: EmployeeType, profilePhoto?: B
             employmentId: Number(data.employmentId),
             dateHired: new Date(data.dateHired),
             userId: Number(data.userId),
+            basicSalary: data.basicSalary ?? 0,
             ...(base64Image && { profilePhoto: base64Image }),
         },
     });
@@ -176,6 +172,7 @@ export async function updateEmployeeService(
         ...(data.siteId !== undefined && { siteId: Number(data.siteId) }),
         ...(data.employmentId !== undefined && { employmentId: Number(data.employmentId) }),
         ...(data.userId !== undefined && { userId: Number(data.userId) }),
+        ...(data.basicSalary !== undefined && { basicSalary: Number(data.basicSalary) }),
         ...(data.dateHired !== undefined && { dateHired: new Date(data.dateHired) }),
     };
 

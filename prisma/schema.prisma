@@ -27,8 +27,9 @@ model Site {
   longitude Float?
   radius    Int?
 
-  employees   Employee[]
-  departments Department[]
+  employees      Employee[]
+  departments    Department[]
+  payrollPeriods PayrollPeriod[]
 }
 
 model Department {
@@ -129,26 +130,30 @@ model Employee {
   siteId       Int
   employmentId Int
   dateHired    DateTime
+  basicSalary  Decimal   @db.Decimal(12, 2)
   isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
   userId       Int?      @unique
 
-  position              Position               @relation(fields: [positionId], references: [id])
-  department            Department             @relation(fields: [departmentId], references: [id])
-  site                  Site                   @relation(fields: [siteId], references: [id])
-  employment            EmploymentType         @relation(fields: [employmentId], references: [id])
-  user                  User?                  @relation(fields: [userId], references: [id])
+  position               Position                @relation(fields: [positionId], references: [id])
+  department             Department              @relation(fields: [departmentId], references: [id])
+  site                   Site                    @relation(fields: [siteId], references: [id])
+  employment             EmploymentType          @relation(fields: [employmentId], references: [id])
+  user                   User?                   @relation(fields: [userId], references: [id])
   // shifts  EmployeeShift[]
-  timelogs              TimeLog[]
-  dtrs                  DTR[]
-  restDays              RestDay[]
-  otRequests            OvertimeRequest[]      @relation("EmployeeOTRequests")
-  leaveRequests         LeaveRequest[]         @relation("EmployeeLeaveRequests")
-  obRequests            OfficialBusiness[]     @relation("EmployeeOBRequests")
-  leaveBalances         LeaveBalance[]
-  attendanceCorrections AttendanceCorrection[]
+  timelogs               TimeLog[]
+  dtrs                   DTR[]
+  restDays               RestDay[]
+  otRequests             OvertimeRequest[]       @relation("EmployeeOTRequests")
+  leaveRequests          LeaveRequest[]          @relation("EmployeeLeaveRequests")
+  obRequests             OfficialBusiness[]      @relation("EmployeeOBRequests")
+  leaveBalances          LeaveBalance[]
+  attendanceCorrections  AttendanceCorrection[]
+  governmentDetail       GovernmentDetail?
+  payrolls               Payroll[]
+  thirteenthMonthLedgers ThirteenthMonthLedger[]
 }
 
 model EmploymentType {
@@ -226,7 +231,9 @@ model DTR {
   isHalfDay        Boolean   @default(false)
   status           String
 
-  employee Employee @relation(fields: [employeeId], references: [id])
+  employee  Employee @relation(fields: [employeeId], references: [id])
+  payroll   Payroll? @relation(fields: [payrollId], references: [id])
+  payrollId Int?
 
   @@unique([employeeId, workDate])
 }
@@ -370,4 +377,140 @@ model AuditLog {
   createdAt DateTime @default(now())
   request   Json?
   response  Json?
+}
+
+model GovernmentDetail {
+  id         Int @id @default(autoincrement())
+  employeeId Int @unique
+
+  sssNumber    String?
+  philHealthNo String?
+  pagIbigNo    String?
+  tinNumber    String?
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+enum PayrollStatus {
+  DRAFT
+  APPROVED
+  LOCKED
+  REVERSED
+}
+
+enum PayrollItemType {
+  EARNING
+  DEDUCTION
+  EMPLOYER_CONTRIBUTION
+  ALLOWANCE
+}
+
+model PayrollPeriod {
+  id        Int           @id @default(autoincrement())
+  startDate DateTime
+  endDate   DateTime
+  siteId    Int
+  status    PayrollStatus @default(DRAFT)
+
+  site     Site      @relation(fields: [siteId], references: [id])
+  payrolls Payroll[]
+
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([startDate, endDate, siteId])
+}
+
+model Payroll {
+  id              Int @id @default(autoincrement())
+  employeeId      Int
+  payrollPeriodId Int
+
+  basicSalary    Decimal @db.Decimal(12, 2)
+  grossPay       Decimal @default(0) @db.Decimal(12, 2)
+  totalAllowance Decimal @default(0) @db.Decimal(12, 2)
+  totalDeduction Decimal @default(0) @db.Decimal(12, 2)
+  employerShare  Decimal @default(0) @db.Decimal(12, 2)
+  netPay         Decimal @default(0) @db.Decimal(12, 2)
+
+  status     PayrollStatus @default(DRAFT)
+  approvedBy Int?
+  approvedAt DateTime?
+
+  deletedAt DateTime?
+
+  employee      Employee      @relation(fields: [employeeId], references: [id])
+  payrollPeriod PayrollPeriod @relation(fields: [payrollPeriodId], references: [id])
+  items         PayrollItem[]
+  dtrs          DTR[]
+
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  thirteenthMonthLedgers ThirteenthMonthLedger[]
+
+  @@unique([employeeId, payrollPeriodId])
+}
+
+model PayrollItem {
+  id        Int             @id @default(autoincrement())
+  payrollId Int
+  type      PayrollItemType
+  name      String
+  amount    Decimal         @db.Decimal(12, 2)
+
+  govContributionId Int?
+  govContribution   GovContribution? @relation(fields: [govContributionId], references: [id])
+
+  payroll Payroll @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model ThirteenthMonthLedger {
+  id         Int     @id @default(autoincrement())
+  employeeId Int
+  payrollId  Int
+  year       Int
+  amount     Decimal @db.Decimal(12, 2)
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+  payroll  Payroll  @relation(fields: [payrollId], references: [id])
+}
+
+model GovContribution {
+  id            Int     @id @default(autoincrement())
+  type          GovType
+  minSalary     Decimal @db.Decimal(12, 2)
+  maxSalary     Decimal @db.Decimal(12, 2)
+  employeeShare Decimal @db.Decimal(12, 2)
+  employerShare Decimal @db.Decimal(12, 2)
+
+  deletedAt DateTime?
+
+  payrollItems PayrollItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([type])
+}
+
+enum GovType {
+  SSS
+  PHILHEALTH
+  PAGIBIG
+}
+
+model PayrollAudit {
+  id              Int      @id @default(autoincrement())
+  payrollPeriodId Int
+  action          String
+  performedBy     Int
+  createdAt       DateTime @default(now())
 }

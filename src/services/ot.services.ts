@@ -13,9 +13,28 @@ interface OTRequestType {
 interface OTApproveType {
     approverId: number;
     remark?: string;
+    workDate: string;
+    employeeId: number;
+}
+
+async function isPayrollLocked(employeeId: number, workDate: string) {
+    const dtr = await prisma.dTR.findFirst({
+        where: {
+            employeeId,
+            workDate,
+            payroll: {
+                is: {
+                    status: "POSTED",
+                },
+            },
+        },
+    });
+    return !!dtr;
 }
 
 export async function createOtReqService(data: OTRequestType) {
+    const locked = await isPayrollLocked(data.employeeId, data.workDate);
+    if (locked) throw new Error("Payroll is locked");
     const result = prisma.overtimeRequest.create({ data });
 
     return result;
@@ -60,6 +79,8 @@ export async function getOtRequestByEmpIdService(employeeId: number) {
 }
 
 export async function approveOtRequestService(id: number, data: Partial<OTApproveType>) {
+    const locked = await isPayrollLocked(Number(data?.employeeId), data?.workDate!);
+    if (locked) throw new Error("Payroll is locked");
     const updateData = {
         ...data,
         status: "APPROVED" as const,

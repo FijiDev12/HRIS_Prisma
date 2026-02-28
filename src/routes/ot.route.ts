@@ -14,10 +14,10 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/", rbacMiddleware(["ADMIN"]), getOtRequestController);
-router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getOtRequestByIdController);
-router.get("/emp/:empid", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getOtRequestByEmpIdController);
-router.post("/", rbacMiddleware(["ADMIN"]), createOtRequestController);
+router.get("/", rbacMiddleware(["ADMIN", "HR"]), getOtRequestController);
+router.get("/:id", rbacMiddleware(["ADMIN", "HR", "EMPLOYEE", "GUEST", "EXECUTIVE"]), getOtRequestByIdController);
+router.get("/emp/:empid", rbacMiddleware(["ADMIN", "HR", "EMPLOYEE", "GUEST", "EXECUTIVE"]), getOtRequestByEmpIdController);
+router.post("/", rbacMiddleware(["ADMIN", "HR", "EMPLOYEE", "GUEST", "EXECUTIVE"]), createOtRequestController);
 router.patch("/approve/:id", rbacMiddleware(["ADMIN", "HR"]), approveOtRequestController);
 router.patch("/reject/:id", rbacMiddleware(["ADMIN", "HR"]), rejectOtRequestController);
 
