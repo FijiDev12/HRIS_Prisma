@@ -103,6 +103,7 @@ async function main() {
             undertimeMinutes: 0,
             status: "APPROVED",
             payrollId: payroll.id,
+            siteId: employee.siteId,
         },
     });
 
@@ -117,6 +118,7 @@ async function main() {
             undertimeMinutes: 0,
             status: "APPROVED",
             payrollId: payroll.id,
+            siteId: employee.siteId,
         },
     });
 

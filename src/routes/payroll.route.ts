@@ -7,6 +7,8 @@ import {
     createPayrollPeriod,
     postPayrollPeriod,
     softDeletePayrollPeriod,
+    approvePayrollPeriod,
+    unlockPayroll,
 } from "../controllers/payroll.controller";
 
 const router = Router();
@@ -14,10 +16,12 @@ const router = Router();
 router.post("/generate", generatePayroll);
 router.get("/period/:periodId", getPayrollByPeriod);
 router.delete("/:id", softDeletePayroll);
-router.post("/reverse/:id", reversePayroll);
+router.patch("/reverse/:id", reversePayroll);
 
 router.post("/period", createPayrollPeriod);
 router.post("/period/post/:id", postPayrollPeriod);
 router.delete("/period/:id", softDeletePayrollPeriod);
+router.patch("/period/approve/:id", approvePayrollPeriod);
+router.patch("/period/unlock/:id", unlockPayroll);
 
 export default router;

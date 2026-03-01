@@ -7,6 +7,8 @@ import {
     createPayrollPeriodService,
     postPayrollPeriodService,
     softDeletePayrollPeriodService,
+    approvePayrollPeriodService,
+    unlockPayrollService,
 } from "../services/payroll.services";
 
 export const generatePayroll = async (req: Request, res: Response) => {
@@ -130,6 +132,43 @@ export const softDeletePayrollPeriod = async (req: Request, res: Response) => {
         return res.status(400).json({
             code: 400,
             message: error.message
+        });
+    }
+};
+
+export const approvePayrollPeriod = async (req: Request, res: Response) => {
+    try {
+        const periodId = Number(req.params.id);
+        const performedBy = Number(req.body.performedBy);
+
+        const result = await approvePayrollPeriodService(periodId, performedBy);
+
+        return res.status(200).json({
+            code: 200,
+            message: result,
+        });
+    } catch (err: any) {
+        return res.status(400).json({
+            code: 400,
+            message: err.message
+        });
+    }
+};
+
+export const unlockPayroll = async (req: Request, res: Response) => {
+    try {
+        const payrollId = Number(req.params.id);
+
+        const result = await unlockPayrollService(payrollId);
+
+        return res.status(200).json({
+            code: 200,
+            message: result,
+        });
+    } catch (err: any) {
+        return res.status(400).json({
+            code: 400,
+            message: err.message
         });
     }
 };

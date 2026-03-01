@@ -30,6 +30,8 @@ model Site {
   employees      Employee[]
   departments    Department[]
   payrollPeriods PayrollPeriod[]
+  timeLogs       TimeLog[]
+  dtrs           DTR[]
 }
 
 model Department {
@@ -215,8 +217,10 @@ model TimeLog {
   selfie     String?
   latitude   Float?
   longitude  Float?
+  siteId     Int
 
   employee Employee @relation(fields: [employeeId], references: [id])
+  site     Site     @relation(fields: [siteId], references: [id])
 }
 
 model DTR {
@@ -230,10 +234,13 @@ model DTR {
   undertimeMinutes Int       @default(0)
   isHalfDay        Boolean   @default(false)
   status           String
+  siteId           Int
 
   employee  Employee @relation(fields: [employeeId], references: [id])
   payroll   Payroll? @relation(fields: [payrollId], references: [id])
   payrollId Int?
+
+  site Site @relation(fields: [siteId], references: [id])
 
   @@unique([employeeId, workDate])
 }
@@ -398,7 +405,6 @@ model GovernmentDetail {
 enum PayrollStatus {
   DRAFT
   APPROVED
-  LOCKED
   REVERSED
 }
 
@@ -420,6 +426,8 @@ model PayrollPeriod {
   payrolls Payroll[]
 
   deletedAt DateTime?
+  isLocked  Boolean   @default(false)
+  lockedAt  DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -442,6 +450,9 @@ model Payroll {
   status     PayrollStatus @default(DRAFT)
   approvedBy Int?
   approvedAt DateTime?
+
+  isLocked Boolean   @default(false)
+  lockedAt DateTime?
 
   deletedAt DateTime?
 

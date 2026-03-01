@@ -229,8 +229,11 @@ export const getPayrollByPeriodService = async (periodId: number) => {
 export const softDeletePayrollService = async (id: number) => {
     const payroll = await prisma.payroll.findUnique({ where: { id } });
     if (!payroll) throw new Error("Payroll not found");
+    if (payroll.isLocked)
+        throw new Error("Cannot delete locked payroll");
+
     if (payroll.status !== PayrollStatus.DRAFT)
-        throw new Error("Cannot delete non-DRAFT payroll");
+        throw new Error("Cannot delete locked payroll");
     return prisma.payroll.update({ where: { id }, data: { deletedAt: new Date() } });
 };
 
@@ -251,5 +254,74 @@ export const reversePayrollService = async (id: number, performedBy: number) => 
         });
 
         return { message: "Payroll reversed successfully" };
+    });
+};
+
+export const approvePayrollPeriodService = async (
+    periodId: number,
+    performedBy: number
+) => {
+    return prisma.$transaction(async (tx) => {
+        const payrolls = await tx.payroll.findMany({
+            where: { payrollPeriodId: periodId, deletedAt: null },
+        });
+
+        if (!payrolls.length) throw new Error("No payrolls found");
+
+        for (const p of payrolls) {
+            if (p.status !== PayrollStatus.DRAFT)
+                throw new Error("All payrolls must be DRAFT");
+        }
+
+        const now = new Date();
+
+        await tx.payroll.updateMany({
+            where: { payrollPeriodId: periodId },
+            data: {
+                status: PayrollStatus.APPROVED,
+                approvedBy: performedBy,
+                approvedAt: now,
+                isLocked: true,
+                lockedAt: now,
+            },
+        });
+
+        await tx.payrollPeriod.update({
+            where: { id: periodId },
+            data: {
+                status: PayrollStatus.APPROVED,
+                isLocked: true,
+                lockedAt: now,
+            },
+        });
+
+        return { message: "Payroll period approved & locked successfully" };
+    });
+};
+
+export const unlockPayrollService = async (
+    payrollId: number,
+) => {
+    return prisma.$transaction(async (tx) => {
+        const payroll = await tx.payroll.findUnique({
+            where: { id: payrollId },
+        });
+
+        if (!payroll) throw new Error("Payroll not found");
+        if (!payroll.isLocked)
+            throw new Error("Payroll is not locked");
+
+        await tx.payroll.update({
+            where: { id: payrollId },
+            data: {
+                isLocked: false,
+                lockedAt: null,
+                status: PayrollStatus.DRAFT,
+                approvedBy: null,
+                approvedAt: null,
+            },
+        });
+
+        return { message: "Payroll unlocked successfully" };
     });
 };

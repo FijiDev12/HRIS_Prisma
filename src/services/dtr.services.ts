@@ -87,6 +87,7 @@ export async function getDTRDateRange(filter: GettDTRFilter) {
                         employeeId: emp.id,
                         workDate,
                         status: "PENDING",
+                        siteId: emp.siteId
                     },
                 });
             }
@@ -144,6 +145,14 @@ export async function getDTRDateRange(filter: GettDTRFilter) {
             });
         }
     }
+
+    return result;
+}
+
+export async function getDTRBySiteIdService(siteId: number, dateFrom: string, dateTo: string) {
+    const result = await prisma.dTR.findMany({
+        where: { siteId, workDate: { gte: dateFrom, lte: dateTo } },
+    });
 
     return result;
 }

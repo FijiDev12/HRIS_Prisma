@@ -91,7 +91,7 @@ export async function createTimeLog(employeeNo: number, selfieBuffer: Buffer, la
     const base64Image = selfieBuffer.toString("base64");
 
     const timeLog = await prisma.timeLog.create({
-        data: { employeeId: id, type: logType, loggedAt: now, logDate, selfie: base64Image, latitude, longitude },
+        data: { employeeId: id, type: logType, loggedAt: now, logDate, selfie: base64Image, latitude, longitude, siteId: employee.siteId },
     });
 
     dtr = await prisma.dTR.upsert({
@@ -106,6 +106,7 @@ export async function createTimeLog(employeeNo: number, selfieBuffer: Buffer, la
             timeIn: logType === "IN" ? now : undefined,
             timeOut: logType === "OUT" ? now : undefined,
             status: "PENDING",
+            siteId: employee.siteId,
         },
     });
 
@@ -209,4 +210,12 @@ export async function createTimeLog(employeeNo: number, selfieBuffer: Buffer, la
             ? `data:image/jpeg;base64,${timeLog.selfie}`
             : null,
     };
+}
+
+export async function getTimelogsBySiteIdService(siteId: number, dateFrom: string, dateTo: string) {
+    const result = await prisma.timeLog.findMany({
+        where: { siteId, logDate: { gte: dateFrom, lte: dateTo } },
+    });
+
+    return result;
 }
