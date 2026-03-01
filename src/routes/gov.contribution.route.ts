@@ -13,10 +13,10 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.post("/", rbacMiddleware(["ADMIN"]), createGovContributionController);
-router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE"]), getGovContributionByIdController);
-router.get("/", rbacMiddleware(["ADMIN"]), getAllGovContributionsController);
-router.patch("/:id", rbacMiddleware(["ADMIN"]), updateGovContributionController);
-router.delete("/:id", rbacMiddleware(["ADMIN"]), deleteGovContributionController);
+router.post("/", rbacMiddleware(["ADMIN", "HR"]), createGovContributionController);
+router.get("/:id", getGovContributionByIdController);
+router.get("/", getAllGovContributionsController);
+router.patch("/:id", rbacMiddleware(["ADMIN", "HR"]), updateGovContributionController);
+router.delete("/:id", rbacMiddleware(["ADMIN", "HR"]), deleteGovContributionController);
 
 export default router;

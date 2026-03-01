@@ -13,8 +13,8 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/", rbacMiddleware(["ADMIN", "EMPLOYEE", "GUEST", "EXECUTIVE", "HR"]), getRestdayController);
-router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE", "GUEST", "EXECUTIVE", "HR"]), getRestdayByIdController);
+router.get("/", getRestdayController);
+router.get("/:id", getRestdayByIdController);
 router.post("/", rbacMiddleware(["ADMIN", "HR"]), createRestdayController);
 router.patch("/:id", rbacMiddleware(["ADMIN", "HR"]), updateRestdayController);
 router.delete("/:id", rbacMiddleware(["ADMIN", "HR"]), deleteRestdayController);

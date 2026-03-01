@@ -30,6 +30,8 @@ export const createTimeLogController = async (req: Request, res: Response) => {
 export const getTimelogsBySiteIdController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     const { dateFrom, dateTo } = req.query;
+
+    console.log(req.query)
     if (!id || isNaN(id) || !dateFrom || !dateTo) {
         return res.status(400).json({
             code: 400,

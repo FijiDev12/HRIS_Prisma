@@ -13,8 +13,8 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/", rbacMiddleware(["ADMIN", "EMPLOYEE", "GUEST", "EXECUTIVE", "HR"]), getSitesController);
-router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE", "GUEST", "EXECUTIVE", "HR"]), getSiteByIdController);
+router.get("/", getSitesController);
+router.get("/:id", getSiteByIdController);
 router.post("/", rbacMiddleware(["ADMIN", "HR"]), createSiteController);
 router.patch("/:id", rbacMiddleware(["ADMIN", "HR"]), updateSiteController);
 router.delete("/:id", rbacMiddleware(["ADMIN", "HR"]), deleteSiteController);

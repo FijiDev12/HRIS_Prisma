@@ -13,10 +13,10 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/", rbacMiddleware(["ADMIN", "EXECUTIVE", "HR"]), getUsersController);
-router.get("/:id", rbacMiddleware(["ADMIN", "EMPLOYEE", "GUEST", "EXECUTIVE", "HR"]), getUserByIdController);
-router.post("/", rbacMiddleware(["ADMIN", "HR", "EXECUTIVE", "GUEST", "EMPLOYEE"]), createUserController);
-router.patch("/:id", rbacMiddleware(["ADMIN", "HR", "EXECUTIVE"]), updateUserController);
-router.delete("/:id", rbacMiddleware(["ADMIN", "HR", "EXECUTIVE"]), deleteUserController);
+router.get("/", getUsersController);
+router.get("/:id", getUserByIdController);
+router.post("/", rbacMiddleware(["ADMIN", "HR"]), createUserController);
+router.patch("/:id", rbacMiddleware(["ADMIN", "HR"]), updateUserController);
+router.delete("/:id", rbacMiddleware(["ADMIN", "HR"]), deleteUserController);
 
 export default router;
