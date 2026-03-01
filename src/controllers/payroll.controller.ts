@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import {
-    generatePayrollService,
     getPayrollByPeriodService,
     softDeletePayrollService,
     reversePayrollService,
@@ -9,18 +8,20 @@ import {
     softDeletePayrollPeriodService,
     approvePayrollPeriodService,
     unlockPayrollService,
+    generatePayrollForSiteService,
+    getPayrollByEmployeeIdService,
 } from "../services/payroll.services";
 
 export const generatePayroll = async (req: Request, res: Response) => {
     try {
-        const { employeeId, payrollPeriodId } = req.body;
-        if (!employeeId || !payrollPeriodId)
+        const { siteId, payrollPeriodId } = req.body;
+        if (!siteId || !payrollPeriodId)
             return res.status(400).json({
                 code: 400,
-                message: "employeeId and payrollPeriodId required"
+                message: "siteId and payrollPeriodId required"
             });
 
-        const payroll = await generatePayrollService(employeeId, payrollPeriodId);
+        const payroll = await generatePayrollForSiteService(Number(siteId), Number(payrollPeriodId));
         return res.status(201).json({
             code: 201,
             message: "Payroll generated successfully",
@@ -169,6 +170,23 @@ export const unlockPayroll = async (req: Request, res: Response) => {
         return res.status(400).json({
             code: 400,
             message: err.message
+        });
+    }
+};
+
+export const getPayrollByEmployeeId = async (req: Request, res: Response) => {
+    try {
+        const { periodId, employeeId } = req.params;
+        const payrolls = await getPayrollByEmployeeIdService(Number(employeeId), Number(periodId));
+        return res.status(200).json({
+            code: 200,
+            message: "Payroll by period fetched successfully",
+            data: payrolls
+        });
+    } catch (error: any) {
+        return res.status(400).json({
+            code: 400,
+            message: error.message
         });
     }
 };
