@@ -254,6 +254,29 @@ export const getPayrollByPeriodService = async (periodId: number) => {
     });
 };
 
+export const getPayrollAllPeriodService = async () => {
+    return prisma.payroll.findMany({
+        where: { deletedAt: null },
+        include: {
+            employee: true,
+            items: true,
+            dtrs: {
+                select: {
+                    id: true,
+                    workDate: true,
+                    timeIn: true,
+                    timeOut: true,
+                    lateMinutes: true,
+                    undertimeMinutes: true,
+                    overtimeMinutes: true,
+                    isHalfDay: true,
+                    status: true,
+                },
+            },
+        },
+    });
+};
+
 export const softDeletePayrollService = async (id: number) => {
     const payroll = await prisma.payroll.findUnique({ where: { id } });
     if (!payroll) throw new Error("Payroll not found");

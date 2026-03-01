@@ -286,7 +286,8 @@ export async function createAttendanceCorrection(
 export async function approveAttendanceCorrection(
     correctionId: number,
     approverId: number,
-    remarks?: string
+    remarks?: string,
+    siteId?: number,
 ) {
     const correction = await prisma.attendanceCorrection.findUnique({
         where: { id: correctionId },
@@ -304,7 +305,7 @@ export async function approveAttendanceCorrection(
             approvedAt: new Date(),
             remarks,
         },
-    });
+    }); ``
 
     const type = correction.type === "IN" ? "IN" : "OUT";
     const correctedDateTime = correction.correctedTime
@@ -329,6 +330,7 @@ export async function approveAttendanceCorrection(
                 logDate: correction.logDate,
                 type,
                 loggedAt: correctedDateTime ?? new Date(),
+                siteId: siteId ?? 0,
             },
         });
     }

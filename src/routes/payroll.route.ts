@@ -10,6 +10,7 @@ import {
     approvePayrollPeriod,
     unlockPayroll,
     getPayrollByEmployeeId,
+    getPayrollAllPeriod,
 } from "../controllers/payroll.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { rbacMiddleware } from "../middleware/rbac.middleware";
@@ -30,5 +31,6 @@ router.patch("/period/approve/:id", rbacMiddleware(["ADMIN", "HR"]), approvePayr
 router.patch("/period/unlock/:id", rbacMiddleware(["ADMIN", "HR"]), unlockPayroll);
 
 router.get("/employee/:employeeId/period/:periodId", getPayrollByEmployeeId);
+router.get("/period", getPayrollAllPeriod);
 
 export default router;

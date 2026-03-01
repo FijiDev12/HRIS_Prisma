@@ -10,6 +10,7 @@ import {
     unlockPayrollService,
     generatePayrollForSiteService,
     getPayrollByEmployeeIdService,
+    getPayrollAllPeriodService,
 } from "../services/payroll.services";
 
 export const generatePayroll = async (req: Request, res: Response) => {
@@ -42,6 +43,22 @@ export const getPayrollByPeriod = async (req: Request, res: Response) => {
         return res.status(200).json({
             code: 200,
             message: "Payroll by period fetched successfully",
+            data: payrolls
+        });
+    } catch (error: any) {
+        return res.status(400).json({
+            code: 400,
+            message: error.message
+        });
+    }
+};
+
+export const getPayrollAllPeriod = async (req: Request, res: Response) => {
+    try {
+        const payrolls = await getPayrollAllPeriodService();
+        return res.status(200).json({
+            code: 200,
+            message: "Payroll all period fetched successfully",
             data: payrolls
         });
     } catch (error: any) {

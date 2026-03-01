@@ -40,11 +40,11 @@ router.post("/assign/schedule", assignShiftToEmployeeCont);
 router.get("/assign/schedule", rbacMiddleware(["ADMIN", "HR"]), getEmployeeShiftsController);
 router.get("/assign/schedule/:id", getEmployeeShiftByEmpIdController);
 
-router.get("/status", getEmploymentStatusController);
-router.get("/status/:id", getEmploymentStatusByIdController);
-router.post("/status", rbacMiddleware(["ADMIN", "HR"]), createEmploymentStatusController);
-router.patch("/status/:id", rbacMiddleware(["ADMIN", "HR"]), updateEmploymentStatusController);
-router.delete("/status/:id", rbacMiddleware(["ADMIN", "HR"]), deleteEmploymentStatusController);
+router.get("/employment/status", getEmploymentStatusController);
+router.get("/employment/status/:id", getEmploymentStatusByIdController);
+router.post("/employment/status", rbacMiddleware(["ADMIN", "HR"]), createEmploymentStatusController);
+router.patch("/employment/status/:id", rbacMiddleware(["ADMIN", "HR"]), updateEmploymentStatusController);
+router.delete("/employment/status/:id", rbacMiddleware(["ADMIN", "HR"]), deleteEmploymentStatusController);
 
 router.post("/attendance/correction", createAttendanceCorrectionController);
 router.post("/attendance/correction/approve", rbacMiddleware(["ADMIN", "HR"]), approveAttendanceCorrectionController);

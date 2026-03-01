@@ -423,14 +423,14 @@ export const createAttendanceCorrectionController = async (req: Request, res: Re
 };
 
 export const approveAttendanceCorrectionController = async (req: Request, res: Response) => {
-    const { correctionId, approverId, remarks } = req.body;
+    const { correctionId, approverId, remarks, siteId } = req.body;
 
-    if (!correctionId || !approverId) {
+    if (!correctionId || !approverId || !siteId) {
         return res.status(400).json({ code: 400, message: "Missing required fields" });
     }
 
     try {
-        const result = await approveAttendanceCorrection(Number(correctionId), Number(approverId), remarks);
+        const result = await approveAttendanceCorrection(Number(correctionId), Number(approverId), remarks, Number(siteId));
         res.status(200).json({ code: 200, message: "Attendance correction approved", data: result });
     } catch (error: any) {
         res.status(500).json({ code: 500, message: error.message || "Internal Server Error" });
