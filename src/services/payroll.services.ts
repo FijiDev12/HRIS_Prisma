@@ -255,25 +255,8 @@ export const getPayrollByPeriodService = async (periodId: number) => {
 };
 
 export const getPayrollAllPeriodService = async () => {
-    return prisma.payroll.findMany({
+    return prisma.payrollPeriod.findMany({
         where: { deletedAt: null },
-        include: {
-            employee: true,
-            items: true,
-            dtrs: {
-                select: {
-                    id: true,
-                    workDate: true,
-                    timeIn: true,
-                    timeOut: true,
-                    lateMinutes: true,
-                    undertimeMinutes: true,
-                    overtimeMinutes: true,
-                    isHalfDay: true,
-                    status: true,
-                },
-            },
-        },
     });
 };
 
