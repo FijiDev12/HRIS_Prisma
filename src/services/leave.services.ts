@@ -324,8 +324,25 @@ export async function rejectLeaveRequestService(id: number, data: Partial<LeaveA
     return result;
 }
 
-export async function createLeaveBalanceService(data: any) {
+export async function createLeaveBalanceService(data: {
+    employeeId: number;
+    leaveTypeId: number;
+    totalDays: number;
+}) {
     const currentYear = new Date().getFullYear();
+
+    const existing = await prisma.leaveBalance.findFirst({
+        where: {
+            employeeId: data.employeeId,
+            leaveTypeId: data.leaveTypeId,
+            year: currentYear,
+            deletedAt: null
+        }
+    });
+
+    if (existing) {
+        throw new Error("Leave balance already exists for this employee and leave type this year.");
+    }
 
     const result = await prisma.leaveBalance.create({
         data: {
@@ -341,47 +358,57 @@ export async function createLeaveBalanceService(data: any) {
 }
 
 export async function getLeaveBalanceService() {
-    const result = await prisma.leaveBalance.findMany({
-        where: { deletedAt: null }
+    return prisma.leaveBalance.findMany({
+        where: {
+            deletedAt: null
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
     });
-
-    return result;
 }
 
 export async function getLeaveBalanceByIdService(id: number) {
-    const result = await prisma.leaveBalance.findUnique({
-        where: { id, deletedAt: null }
+    return prisma.leaveBalance.findFirst({
+        where: {
+            id,
+            deletedAt: null
+        }
     });
-
-    return result;
 }
 
 export async function getLeaveBalanceByEmpIdService(employeeId: number) {
-    const result = await prisma.leaveBalance.findMany({
-        where: { employeeId, deletedAt: null }
+    return prisma.leaveBalance.findMany({
+        where: {
+            employeeId,
+            deletedAt: null
+        }
     });
-
-    return result;
 }
 
-export async function updateLeaveBalanceService(id: number, data: any) {
-    const result = await prisma.leaveBalance.update({
+export async function updateLeaveBalanceService(
+    id: number,
+    data: {
+        leaveTypeId?: number;
+        totalDays?: number;
+        remainingDays?: number;
+    }
+) {
+    return prisma.leaveBalance.update({
         where: { id },
         data: {
             leaveTypeId: data.leaveTypeId,
             totalDays: data.totalDays,
-            remainingDays: data.remainingDays,
+            remainingDays: data.remainingDays
         }
     });
-
-    return result;
 }
 
 export async function deleteLeaveBalanceService(id: number) {
-    const result = await prisma.leaveBalance.update({
+    return prisma.leaveBalance.update({
         where: { id },
-        data: { deletedAt: new Date() }
+        data: {
+            deletedAt: new Date()
+        }
     });
-
-    return result;
 }

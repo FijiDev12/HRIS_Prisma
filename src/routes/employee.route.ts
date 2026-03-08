@@ -4,6 +4,7 @@ import { rbacMiddleware } from "../middleware/rbac.middleware";
 import {
     approveAttendanceCorrectionController,
     assignShiftToEmployeeCont,
+    bulkUploadEmployees,
     createAttendanceCorrectionController,
     createEmployeeController,
     createEmploymentStatusController,
@@ -20,6 +21,8 @@ import {
     getEmploymentStatusController,
     rejectAttendanceCorrectionController,
     updateEmployeeController,
+    updateEmployeeSiteController,
+    updateEmployeeTempPasswordController,
     updateEmploymentStatusController
 } from "../controllers/employee.controller";
 import multer from "multer";
@@ -35,6 +38,7 @@ router.get("/:id", getEmployeeByIdController);
 router.post("/", upload.single("profilePhoto"), createEmployeeController);
 router.patch("/:id", upload.single("profilePhoto"), updateEmployeeController);
 router.delete("/:id", rbacMiddleware(["ADMIN", "HR"]), deleteEmployeeController);
+router.patch("/:id/temp-password", updateEmployeeTempPasswordController);
 
 router.post("/assign/schedule", assignShiftToEmployeeCont);
 router.get("/assign/schedule", rbacMiddleware(["ADMIN", "HR"]), getEmployeeShiftsController);
@@ -52,5 +56,8 @@ router.post("/attendance/correction/reject", rbacMiddleware(["ADMIN", "HR"]), re
 router.get("/attendance/correction", getAttendanceCorrectionController);
 router.get("/attendance/correction/:id", getAttendanceCorrectionByIdController);
 router.get("/attendance/correction/employee/:employeeId", getAttendanceCorrectionByEmployeeIdController);
+
+router.post("/bulk-upload", upload.single("file"), bulkUploadEmployees);
+router.patch("/:id/site", updateEmployeeSiteController);
 
 export default router;

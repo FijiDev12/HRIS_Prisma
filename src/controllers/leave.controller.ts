@@ -1,24 +1,24 @@
 import { Request, Response } from "express";
-import { 
+import {
     approveLeaveRequestService,
     createLeaveBalanceService,
     createLeaveReqService,
-    createLeaveService, 
-    deleteLeaveBalanceService, 
-    deleteLeaveService, 
-    getLeaveBalanceByEmpIdService, 
-    getLeaveBalanceByIdService, 
-    getLeaveBalanceService, 
-    getLeaveByIdService, 
-    getLeaveRequestByEmpIdService, 
-    getLeaveRequestService, 
-    getLeavesService, 
-    rejectLeaveRequestService, 
-    updateLeaveBalanceService, 
-    updateLeaveService 
+    createLeaveService,
+    deleteLeaveBalanceService,
+    deleteLeaveService,
+    getLeaveBalanceByEmpIdService,
+    getLeaveBalanceByIdService,
+    getLeaveBalanceService,
+    getLeaveByIdService,
+    getLeaveRequestByEmpIdService,
+    getLeaveRequestService,
+    getLeavesService,
+    rejectLeaveRequestService,
+    updateLeaveBalanceService,
+    updateLeaveService
 } from "../services/leave.services";
 
-export const getLeavesController = async (_:Request, res: Response) => {
+export const getLeavesController = async (_: Request, res: Response) => {
     try {
         const result = await getLeavesService();
         res.status(200).json({
@@ -36,13 +36,13 @@ export const getLeavesController = async (_:Request, res: Response) => {
 
 export const getLeaveByIdController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
         });
     }
-    
+
     try {
         const result = await getLeaveByIdService(Number(id));
         res.status(200).json({
@@ -60,7 +60,7 @@ export const getLeaveByIdController = async (req: Request, res: Response) => {
 
 export const createLeaveController = async (req: Request, res: Response) => {
     const { leaveName, createdBy } = await req.body;
-    if(!leaveName || !createdBy) {
+    if (!leaveName || !createdBy) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -84,7 +84,7 @@ export const createLeaveController = async (req: Request, res: Response) => {
 
 export const updateLeaveController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -92,7 +92,7 @@ export const updateLeaveController = async (req: Request, res: Response) => {
     }
 
     const { leaveName, createdBy } = await req.body;
-    if(!leaveName || !createdBy) {
+    if (!leaveName || !createdBy) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -116,7 +116,7 @@ export const updateLeaveController = async (req: Request, res: Response) => {
 
 export const deleteLeaveController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -137,7 +137,7 @@ export const deleteLeaveController = async (req: Request, res: Response) => {
     }
 }
 
-export const getLeaveRequestController = async (_:Request, res: Response) => {
+export const getLeaveRequestController = async (_: Request, res: Response) => {
     try {
         const result = await getLeaveRequestService();
         res.status(200).json({
@@ -155,13 +155,13 @@ export const getLeaveRequestController = async (_:Request, res: Response) => {
 
 export const getLeaveRequestByIdController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
         });
     }
-    
+
     try {
         const result = await getLeaveRequestByEmpIdService(Number(id));
         res.status(200).json({
@@ -179,13 +179,13 @@ export const getLeaveRequestByIdController = async (req: Request, res: Response)
 
 export const getLeaveRequestByEmpIdController = async (req: Request, res: Response) => {
     const empid = Number(req.params.empid);
-    if(!empid || isNaN(empid)) {
+    if (!empid || isNaN(empid)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
         });
     }
-    
+
     try {
         const result = await getLeaveRequestByEmpIdService(Number(empid));
         res.status(200).json({
@@ -204,7 +204,7 @@ export const getLeaveRequestByEmpIdController = async (req: Request, res: Respon
 export const createLeaveRequestController = async (req: Request, res: Response) => {
     console.log(req.body)
     const { employeeId, leaveTypeId, fromDate, toDate, reason, createdBy } = await req.body;
-    if(!employeeId || !leaveTypeId || !fromDate || !toDate || !reason || !createdBy) {
+    if (!employeeId || !leaveTypeId || !fromDate || !toDate || !reason || !createdBy) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -228,7 +228,7 @@ export const createLeaveRequestController = async (req: Request, res: Response) 
 
 export const approveLeaveRequestController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -236,7 +236,7 @@ export const approveLeaveRequestController = async (req: Request, res: Response)
     }
 
     const { approverId, remarks } = await req.body;
-    if(!approverId || !remarks) {
+    if (!approverId || !remarks) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -260,7 +260,7 @@ export const approveLeaveRequestController = async (req: Request, res: Response)
 
 export const rejectLeaveRequestController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -268,7 +268,7 @@ export const rejectLeaveRequestController = async (req: Request, res: Response) 
     }
 
     const { approverId, remarks } = await req.body;
-    if(!approverId || !remarks) {
+    if (!approverId || !remarks) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -290,9 +290,8 @@ export const rejectLeaveRequestController = async (req: Request, res: Response) 
     }
 }
 
-export const getLeaveBalanceController = async (_:Request, res: Response) => {
+export const getLeaveBalanceController = async (_: Request, res: Response) => {
     try {
-        console.log(12)
         const result = await getLeaveBalanceService();
         res.status(200).json({
             code: 200,
@@ -309,13 +308,13 @@ export const getLeaveBalanceController = async (_:Request, res: Response) => {
 
 export const getLeaveBalanceByIdController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
         });
     }
-    
+
     try {
         const result = await getLeaveBalanceByIdService(Number(id));
         res.status(200).json({
@@ -333,13 +332,13 @@ export const getLeaveBalanceByIdController = async (req: Request, res: Response)
 
 export const getLeaveBalanceByEmpIdController = async (req: Request, res: Response) => {
     const empid = Number(req.params.empid);
-    if(!empid || isNaN(empid)) {
+    if (!empid || isNaN(empid)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
         });
     }
-    
+
     try {
         const result = await getLeaveBalanceByEmpIdService(Number(empid));
         res.status(200).json({
@@ -356,8 +355,8 @@ export const getLeaveBalanceByEmpIdController = async (req: Request, res: Respon
 }
 
 export const createLeaveBalanceController = async (req: Request, res: Response) => {
-    const { employeeId, leaveTypeId, totalDays, remainingDays } = await req.body;
-    if(!employeeId || !leaveTypeId || !totalDays || !remainingDays) {
+    const { employeeId, leaveTypeId, totalDays } = await req.body;
+    if (!employeeId || !leaveTypeId || !totalDays) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -381,7 +380,7 @@ export const createLeaveBalanceController = async (req: Request, res: Response) 
 
 export const updateLeaveBalanceController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -389,7 +388,7 @@ export const updateLeaveBalanceController = async (req: Request, res: Response) 
     }
 
     const { leaveTypeId, totalDays, remainingDays } = await req.body;
-    if(!leaveTypeId || !totalDays || !remainingDays) {
+    if (!leaveTypeId || !totalDays || !remainingDays) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -413,7 +412,7 @@ export const updateLeaveBalanceController = async (req: Request, res: Response) 
 
 export const deleteLeaveBalanceController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'

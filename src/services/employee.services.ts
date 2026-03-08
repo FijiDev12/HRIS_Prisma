@@ -1,5 +1,7 @@
+import { hashPassword } from "../util/hash.util.";
 import { prisma } from "../util/prisma.util";
 import { addDays } from 'date-fns';
+import * as XLSX from "xlsx";
 
 interface EmploymentType {
     employmentType: string;
@@ -74,17 +76,20 @@ function generateEmployeeNo(lastEmployeeId?: number) {
     return Number(`${year}${nextSeq}`);
 }
 
-export async function createEmployeeService(data: EmployeeType, profilePhoto?: Buffer) {
+export async function createEmployeeService(
+    data: EmployeeType,
+    profilePhoto?: Buffer
+) {
     const existingEmail = await prisma.employee.findUnique({
         where: { email: data.email },
     });
-    console.log("existingEmail:", existingEmail);
+
     if (existingEmail) {
         throw new Error("Email already exists");
     }
 
     const lastEmployee = await prisma.employee.findFirst({
-        orderBy: { id: 'desc' },
+        orderBy: { id: "desc" },
         select: { id: true },
     });
 
@@ -94,29 +99,47 @@ export async function createEmployeeService(data: EmployeeType, profilePhoto?: B
         ? profilePhoto.toString("base64")
         : null;
 
-    const result = await prisma.employee.create({
-        data: {
-            employeeNo,
-            firstName: data.firstName,
-            middleName: data.middleName,
-            lastName: data.lastName,
-            suffix: data.suffix,
-            gender: data.gender,
-            birthDate: new Date(data.birthDate),
-            civilStatus: data.civilStatus ?? 'Single',
-            nationality: data.nationality ?? 'Filipino',
-            address: data.address,
-            email: data.email,
-            contactNo: data.contactNo,
-            positionId: Number(data.positionId),
-            departmentId: Number(data.departmentId),
-            siteId: Number(data.siteId),
-            employmentId: Number(data.employmentId),
-            dateHired: new Date(data.dateHired),
-            userId: Number(data.userId),
-            basicSalary: data.basicSalary ?? 0,
-            ...(base64Image && { profilePhoto: base64Image }),
-        },
+    const result = await prisma.$transaction(async (tx) => {
+
+        const employee = await tx.employee.create({
+            data: {
+                employeeNo,
+                firstName: data.firstName,
+                middleName: data.middleName,
+                lastName: data.lastName,
+                suffix: data.suffix,
+                gender: data.gender,
+                birthDate: new Date(data.birthDate),
+                civilStatus: data.civilStatus ?? "Single",
+                nationality: data.nationality ?? "Filipino",
+                address: data.address,
+                email: data.email,
+                contactNo: data.contactNo,
+                positionId: Number(data.positionId),
+                departmentId: Number(data.departmentId),
+                siteId: Number(data.siteId),
+                employmentId: Number(data.employmentId),
+                dateHired: new Date(data.dateHired),
+                basicSalary: data.basicSalary ?? 0,
+                ...(base64Image && { profilePhoto: base64Image }),
+            },
+        });
+
+        const cleanLastName = data.lastName.replace(/\s+/g, '').toLowerCase();
+        const last4Contact = data.contactNo.slice(-4);
+
+        const user = await tx.user.create({
+            data: {
+                email: data.email,
+                password: await hashPassword(`${cleanLastName}${last4Contact}`),
+                role: {
+                    connect: { id: 2 },
+                },
+                employeeId: employee.id,
+            },
+        });
+
+        return { employee, user };
     });
 
     return result;
@@ -393,6 +416,128 @@ export async function getAttendanceCorrectionByIdService(id: number) {
         include: {
             employee: true,
             shift: true,
+        }
+    });
+
+    return result;
+}
+
+export async function updateEmployeeTempPasswordService(id: number, data: any) {
+    const result = await prisma.employee.update({
+        where: { id },
+        data: {
+            tempPassword: data.tempPassword,
+        }
+    });
+
+    return result;
+}
+
+export async function bulkUploadEmployeeService(fileBuffer: Buffer) {
+
+    const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+
+    const rows: any[] = XLSX.utils.sheet_to_json(sheet);
+
+    const createdEmployees: any[] = [];
+    const errors: any[] = [];
+
+    for (const row of rows) {
+        try {
+
+            const existingEmail = await prisma.employee.findUnique({
+                where: { email: row.email },
+            });
+
+            if (existingEmail) {
+                errors.push({
+                    email: row.email,
+                    message: "Email already exists",
+                });
+                continue;
+            }
+
+            const lastEmployee = await prisma.employee.findFirst({
+                orderBy: { id: "desc" },
+                select: { id: true },
+            });
+
+            const employeeNo = generateEmployeeNo(lastEmployee?.id);
+
+            const result = await prisma.$transaction(async (tx) => {
+
+                const employee = await tx.employee.create({
+                    data: {
+                        employeeNo,
+                        firstName: row.firstName,
+                        middleName: row.middleName,
+                        lastName: row.lastName,
+                        suffix: row.suffix,
+                        gender: row.gender,
+                        birthDate: new Date(row.birthDate),
+                        civilStatus: row.civilStatus ?? "Single",
+                        nationality: row.nationality ?? "Filipino",
+                        address: row.address,
+                        email: row.email,
+                        contactNo: row.contactNo,
+                        positionId: Number(row.positionId),
+                        departmentId: Number(row.departmentId),
+                        siteId: Number(row.siteId),
+                        employmentId: Number(row.employmentId),
+                        dateHired: new Date(row.dateHired),
+                        basicSalary: Number(row.basicSalary ?? 0),
+                    },
+                });
+
+                const cleanLastName = row.lastName
+                    .replace(/\s+/g, "")
+                    .toLowerCase();
+
+                const last4Contact = row.contactNo.slice(-4);
+
+                const user = await tx.user.create({
+                    data: {
+                        email: row.email,
+                        password: await hashPassword(
+                            `${cleanLastName}${last4Contact}`
+                        ),
+                        role: {
+                            connect: { id: 2 },
+                        },
+                        employeeId: employee.id,
+                    },
+                });
+
+                return { employee, user };
+            });
+
+            createdEmployees.push(result);
+
+        } catch (error: any) {
+
+            errors.push({
+                email: row.email,
+                message: error.message,
+            });
+
+        }
+    }
+
+    return {
+        successCount: createdEmployees.length,
+        errorCount: errors.length,
+        createdEmployees,
+        errors,
+    };
+}
+
+export async function updateEmployeeSiteService(id: number, siteId: number) {
+    const result = await prisma.employee.update({
+        where: { id },
+        data: {
+            siteId
         }
     });
 

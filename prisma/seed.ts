@@ -65,7 +65,7 @@ async function main() {
         create: {
             email: "admin@test.com",
             password,
-            roleId: adminRole.id,
+            roleId: adminRole.id
         },
     });
 

@@ -138,6 +138,7 @@ model Employee {
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
   userId       Int?      @unique
+  tempPassword Boolean   @default(true)
 
   position               Position                @relation(fields: [positionId], references: [id])
   department             Department              @relation(fields: [departmentId], references: [id])

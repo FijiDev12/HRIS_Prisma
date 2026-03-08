@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
     approveAttendanceCorrection,
     assignShiftToEmployee,
+    bulkUploadEmployeeService,
     createAttendanceCorrection,
     createEmployeeService,
     createEmploymentStatusService,
@@ -18,6 +19,8 @@ import {
     getEmploymentStatusService,
     rejectAttendanceCorrection,
     updateEmployeeService,
+    updateEmployeeSiteService,
+    updateEmployeeTempPasswordService,
     updateEmploymentStatusService
 } from "../services/employee.services";
 
@@ -33,7 +36,9 @@ export const createEmployeeController = async (req: Request, res: Response) => {
         departmentId,
         siteId,
         employmentId,
-        dateHired
+        dateHired,
+        roleId,
+        password
     } = req.body;
 
     const profilePhoto = req.file;
@@ -49,7 +54,7 @@ export const createEmployeeController = async (req: Request, res: Response) => {
         departmentId,
         siteId,
         employmentId,
-        dateHired
+        dateHired,
     };
 
     const missingFields = Object.entries(requiredFields)
@@ -515,3 +520,107 @@ export const getAttendanceCorrectionByIdController = async (req: Request, res: R
         });
     }
 }
+
+export const updateEmployeeTempPasswordController = async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+
+        if (!id || isNaN(id)) {
+            return res.status(400).json({
+                code: 400,
+                message: "Invalid Employee ID",
+            });
+        }
+
+        const { tempPassword } = req.body;
+
+        if (!tempPassword) {
+            return res.status(400).json({
+                code: 400,
+                message: "Missing tempPassword",
+            });
+        }
+
+        const result = await updateEmployeeTempPasswordService(
+            id,
+            req.body
+        );
+
+        return res.status(200).json({
+            code: 200,
+            message: "Employee temp password updated successfully",
+            data: result,
+        });
+
+    } catch (error: any) {
+        return res.status(500).json({
+            code: 500,
+            message: error.message || "Internal Server Error",
+        });
+    }
+};
+
+export const bulkUploadEmployees = async (req: Request, res: Response) => {
+    try {
+
+        if (!req.file) {
+            return res.status(400).json({
+                message: "File is required"
+            });
+        }
+
+        const result = await bulkUploadEmployeeService(req.file.buffer);
+
+        res.status(201).json({
+            code: 201,
+            message: "Bulk upload completed",
+            data: result
+        });
+
+    } catch (error: any) {
+        res.status(500).json({
+            code: 500,
+            message: error.message || "Internal Server Error"
+        });
+
+    }
+};
+
+export const updateEmployeeSiteController = async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+
+        if (!id || isNaN(id)) {
+            return res.status(400).json({
+                code: 400,
+                message: "Invalid Employee ID",
+            });
+        }
+
+        const { siteId } = req.body;
+
+        if (!siteId) {
+            return res.status(400).json({
+                code: 400,
+                message: "Missing siteId",
+            });
+        }
+
+        const result = await updateEmployeeSiteService(
+            id,
+            siteId
+        );
+
+        return res.status(200).json({
+            code: 200,
+            message: "Employee site updated successfully",
+            data: result,
+        });
+
+    } catch (error: any) {
+        return res.status(500).json({
+            code: 500,
+            message: error.message || "Internal Server Error",
+        });
+    }
+};
