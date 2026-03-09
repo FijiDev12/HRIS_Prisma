@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
-import { 
-    createUserService, 
-    deleteUserService, 
-    getUserByIdService, 
-    getUsersService, 
-    updateUserService 
+import {
+    createUserService,
+    deleteUserService,
+    getUserByIdService,
+    getUsersService,
+    updateUserChangePassService,
+    updateUserService
 } from "../services/user.services";
 
-export const getUsersController = async (_:Request, res: Response) => {
+export const getUsersController = async (_: Request, res: Response) => {
     try {
         const result = await getUsersService();
         res.status(200).json({
@@ -25,13 +26,13 @@ export const getUsersController = async (_:Request, res: Response) => {
 
 export const getUserByIdController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
         });
     }
-    
+
     try {
         const result = await getUserByIdService(Number(id));
         res.status(200).json({
@@ -49,7 +50,7 @@ export const getUserByIdController = async (req: Request, res: Response) => {
 
 export const createUserController = async (req: Request, res: Response) => {
     const { email, password, roleId } = await req.body;
-    if(!email || !password || !roleId) {
+    if (!email || !password || !roleId) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -73,7 +74,7 @@ export const createUserController = async (req: Request, res: Response) => {
 
 export const updateUserController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -81,7 +82,7 @@ export const updateUserController = async (req: Request, res: Response) => {
     }
 
     const { email, password, roleId } = await req.body;
-    if(!email || !password || !roleId) {
+    if (!email || !password || !roleId) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -105,7 +106,7 @@ export const updateUserController = async (req: Request, res: Response) => {
 
 export const deleteUserController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -117,6 +118,38 @@ export const deleteUserController = async (req: Request, res: Response) => {
         res.status(200).json({
             code: 200,
             message: 'Success'
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            code: 500,
+            message: error.message || 'Internal Server Error'
+        });
+    }
+}
+
+export const updateUserChangePassController = async (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+    if (!id || isNaN(id)) {
+        return res.status(400).json({
+            code: 400,
+            message: 'Bad Request'
+        });
+    }
+
+    const { password } = await req.body;
+    if (!password) {
+        return res.status(400).json({
+            code: 400,
+            message: 'Bad Request'
+        });
+    }
+
+    try {
+        const result = await updateUserChangePassService(Number(id), req.body);
+        res.status(200).json({
+            code: 200,
+            message: 'Success',
+            data: result
         });
     } catch (error: any) {
         res.status(500).json({

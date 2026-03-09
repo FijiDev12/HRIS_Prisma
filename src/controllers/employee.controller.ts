@@ -37,8 +37,6 @@ export const createEmployeeController = async (req: Request, res: Response) => {
         siteId,
         employmentId,
         dateHired,
-        roleId,
-        password
     } = req.body;
 
     const profilePhoto = req.file;

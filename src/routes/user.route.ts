@@ -6,6 +6,7 @@ import {
     deleteUserController,
     getUserByIdController,
     getUsersController,
+    updateUserChangePassController,
     updateUserController
 } from "../controllers/user.controller";
 
@@ -18,5 +19,6 @@ router.get("/:id", getUserByIdController);
 router.post("/", rbacMiddleware(["ADMIN", "HR"]), createUserController);
 router.patch("/:id", rbacMiddleware(["ADMIN", "HR"]), updateUserController);
 router.delete("/:id", rbacMiddleware(["ADMIN", "HR"]), deleteUserController);
+router.patch("/change-password/:id", updateUserChangePassController);
 
 export default router;

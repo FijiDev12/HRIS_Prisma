@@ -1,4 +1,4 @@
-import { hashPassword } from "../util/hash.util.";
+import { comparePassword, hashPassword } from "../util/hash.util.";
 import { prisma } from "../util/prisma.util";
 
 interface UserType {
@@ -77,6 +77,51 @@ export async function deleteUserService(id: number) {
         where: { id },
         data: { deletedAt: new Date() }
     });
+
+    return result;
+}
+
+export async function updateUserChangePassService(
+    id: number,
+    data: any
+) {
+    const existingUser = await prisma.user.findUnique({
+        where: { id },
+        include: { employee: true }
+    });
+
+    if (!existingUser) {
+        throw new Error("User not found")
+    }
+
+    const updateData: any = {}
+
+    if (data.password) {
+        const isSamePassword = await comparePassword(
+            data.password,
+            existingUser.password
+        );
+
+        if (isSamePassword) {
+            throw new Error("New password cannot be the same as the current password");
+        }
+
+        updateData.password = await hashPassword(data.password);
+    }
+
+    const result = await prisma.user.update({
+        where: { id },
+        data: updateData
+    });
+
+    if (existingUser.employeeId) {
+        await prisma.employee.update({
+            where: { id: existingUser.employeeId },
+            data: {
+                tempPassword: false
+            }
+        });
+    }
 
     return result;
 }
