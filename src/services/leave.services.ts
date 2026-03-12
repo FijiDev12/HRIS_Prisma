@@ -64,22 +64,25 @@ export async function deleteLeaveService(id: number) {
 function calculateWorkingDays(
     startDate: Date,
     endDate: Date,
-    holidays: Date[],
-    restDays: number[],
+    holidays: string[],
+    restDates: string[],
     isHalfDay: boolean
 ): number {
+
+    const holidaySet = new Set(holidays);
+    const restSet = new Set(restDates);
+
     let totalDays = 0;
+
     const current = new Date(startDate);
 
     while (current <= endDate) {
-        const day = current.getDay();
+        const dateStr = current.toISOString().split("T")[0];
 
-        const isRestDay = restDays.includes(day);
-        const isHoliday = holidays.some(
-            h => h.toDateString() === current.toDateString()
-        );
+        const isHoliday = holidaySet.has(dateStr);
+        const isRestDay = restSet.has(dateStr);
 
-        if (!isRestDay && !isHoliday) {
+        if (!isHoliday && !isRestDay) {
             totalDays++;
         }
 
@@ -87,7 +90,7 @@ function calculateWorkingDays(
     }
 
     if (isHalfDay) {
-        return 0.5;
+        return totalDays > 0 ? 0.5 : 0;
     }
 
     return totalDays;
@@ -97,30 +100,37 @@ export async function createLeaveReqService(data: LeaveRequestType) {
     const { employeeId, leaveTypeId, fromDate, toDate, isHalfday } = data;
     const currentYear = new Date().getFullYear();
 
-    if (new Date(toDate) < new Date(fromDate)) {
+    const start = new Date(fromDate);
+    const end = new Date(toDate);
+
+    if (end < start) {
         throw new Error("End date cannot be before start date.");
     }
 
-    return await prisma.$transaction(async (tx) => {
-
+    return prisma.$transaction(async (tx) => {
         const lockedPeriod = await tx.payrollPeriod.findFirst({
             where: {
                 status: PayrollStatus.APPROVED,
-                startDate: { lte: new Date(toDate) },
-                endDate: { gte: new Date(fromDate) },
+                startDate: { lte: new Date(end) },
+                endDate: { gte: new Date(start) },
             },
         });
 
         if (lockedPeriod) {
-            throw new Error("Cannot file leave. Payroll is already approved for this period.");
+            throw new Error(
+                "Cannot file leave. Payroll is already approved for this period."
+            );
         }
+
+        const startStr = start.toISOString().split("T")[0];
+        const endStr = end.toISOString().split("T")[0];
 
         const overlapping = await tx.leaveRequest.findFirst({
             where: {
                 employeeId,
                 status: { not: "REJECTED" },
-                fromDate: { lte: toDate },
-                toDate: { gte: fromDate },
+                fromDate: { lte: endStr },
+                toDate: { gte: startStr },
             },
         });
 
@@ -131,25 +141,35 @@ export async function createLeaveReqService(data: LeaveRequestType) {
         const holidays = await tx.holidayType.findMany({
             where: {
                 holidayDate: {
-                    gte: new Date(fromDate),
-                    lte: new Date(toDate),
+                    gte: start,
+                    lte: end,
                 },
             },
         });
 
-        const holidayDates = holidays.map((h) => new Date(h.holidayDate));
+        const holidayDates = holidays.map((h) =>
+            h.holidayDate.toISOString().split("T")[0]
+        );
 
         const restDayRecords = await tx.restDay.findMany({
-            where: { employeeId },
+            where: {
+                employeeId,
+                restDate: {
+                    gte: start,
+                    lte: end,
+                },
+            },
         });
 
-        const restDays = restDayRecords.map((r) => r.dayOfWeek);
+        const restDates = restDayRecords.map((r) =>
+            r.restDate.toISOString().split("T")[0]
+        );
 
         const totalDays = calculateWorkingDays(
-            new Date(fromDate),
-            new Date(toDate),
+            start,
+            end,
             holidayDates,
-            restDays,
+            restDates,
             isHalfday
         );
 
@@ -186,8 +206,8 @@ export async function createLeaveReqService(data: LeaveRequestType) {
         await tx.leaveBalance.update({
             where: { id: leaveBalance.id },
             data: {
-                usedDays: leaveBalance.usedDays + totalDays,
-                remainingDays: leaveBalance.remainingDays - totalDays,
+                usedDays: { increment: totalDays },
+                remainingDays: { decrement: totalDays },
             },
         });
 

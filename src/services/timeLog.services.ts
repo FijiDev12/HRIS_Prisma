@@ -1,8 +1,19 @@
 import { prisma } from "../util/prisma.util";
 
-export async function createTimeLog(employeeNo: number, selfieBuffer: Buffer, latitude: number, longitude: number) {
-    function getDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
-        const R = 6371e3; // meters
+export async function createTimeLog(
+    employeeNo: number,
+    selfieBuffer: Buffer,
+    latitude: number,
+    longitude: number
+) {
+
+    const getDistanceInMeters = (
+        lat1: number,
+        lon1: number,
+        lat2: number,
+        lon2: number
+    ): number => {
+        const R = 6371e3;
         const toRad = (deg: number) => (deg * Math.PI) / 180;
 
         const φ1 = toRad(lat1);
@@ -10,68 +21,38 @@ export async function createTimeLog(employeeNo: number, selfieBuffer: Buffer, la
         const Δφ = toRad(lat2 - lat1);
         const Δλ = toRad(lon2 - lon1);
 
-        const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const a =
+            Math.sin(Δφ / 2) ** 2 +
+            Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
 
-        return R * c;
-    }
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    };
 
-    const date = new Date();
-    const now = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+    const now = new Date();
+    const logDate = now.toISOString().split("T")[0];
 
-    const employee: any = await prisma.employee.findUnique({
+    const employee = await prisma.employee.findFirst({
         where: { employeeNo, deletedAt: null }
     });
-    console.log(employee)
 
     if (!employee) throw new Error("Employee not found");
-    const { id } = employee;
 
     const employeeShift = await prisma.employeeShift.findFirst({
-        where: { employeeId: id },
+        where: { employeeId: employee.id },
         include: { shift: true }
     });
-    console.log(employeeShift)
 
-    if (!employeeShift) throw new Error("Shift not assigned for this employee");
-    const { shift } = employeeShift;
+    if (!employeeShift) throw new Error("Shift not assigned");
 
-    let logDate = now.toISOString().split("T")[0];
-
-    if (shift.endTime && shift.startTime && shift.endTime < shift.startTime) {
-        const [endHour, endMin] = shift.endTime.split(":").map(Number);
-        if (now.getHours() < endHour || (now.getHours() === endHour && now.getMinutes() <= endMin)) {
-            const yesterday = new Date(now);
-            yesterday.setDate(yesterday.getDate() - 1);
-            logDate = yesterday.toISOString().split("T")[0];
-        }
-    }
-
-    let dtr = await prisma.dTR.findUnique({
-        where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
-    });
-
-    let logType: "IN" | "OUT" = "IN";
-    if (dtr) {
-        if (!dtr.timeIn) {
-            logType = "IN";
-        }
-        else if (!dtr.timeOut) {
-            logType = "OUT";
-        }
-        else {
-            return "Already clocked IN and OUT for today";
-            // throw new Error("Already clocked IN and OUT for today");
-        }
-    }
+    const shift = employeeShift.shift;
 
     const site: any = await prisma.site.findUnique({
         where: { id: employee.siteId }
     });
 
-    console.log(site)
-
-    if (!site) throw new Error("Site not found");
+    if (site.latitude == null || site.longitude == null || site.radius == null) {
+        throw new Error("Site coordinates or radius are not configured.");
+    }
 
     const distanceFromSite = getDistanceInMeters(
         latitude,
@@ -81,134 +62,144 @@ export async function createTimeLog(employeeNo: number, selfieBuffer: Buffer, la
     );
 
     if (distanceFromSite > site.radius) {
-        return {
-            message: `Cannot clock ${logType} outside ${site.siteName} radius`,
-            distance: Math.round(distanceFromSite) + " meters",
-            allowedRadius: site.radius
-        };
+        throw new Error(
+            `Outside allowed radius (${Math.round(distanceFromSite)}m)`
+        );
     }
+
+    let dtr = await prisma.dTR.findUnique({
+        where: {
+            employeeId_workDate: {
+                employeeId: employee.id,
+                workDate: logDate
+            }
+        }
+    });
+
+    let logType: "IN" | "OUT" = "IN";
+
+    if (dtr?.timeIn && !dtr.timeOut) logType = "OUT";
+    else if (dtr?.timeIn && dtr?.timeOut)
+        throw new Error("Already clocked IN and OUT today");
 
     const base64Image = selfieBuffer.toString("base64");
 
     const timeLog = await prisma.timeLog.create({
-        data: { employeeId: id, type: logType, loggedAt: now, logDate, selfie: base64Image, latitude, longitude, siteId: employee.siteId },
+        data: {
+            employeeId: employee.id,
+            type: logType,
+            loggedAt: now,
+            logDate,
+            selfie: base64Image,
+            latitude,
+            longitude,
+            siteId: employee.siteId
+        }
     });
 
     dtr = await prisma.dTR.upsert({
-        where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
+        where: {
+            employeeId_workDate: {
+                employeeId: employee.id,
+                workDate: logDate
+            }
+        },
         update: {
             timeIn: logType === "IN" ? now : dtr?.timeIn,
-            timeOut: logType === "OUT" ? now : dtr?.timeOut,
+            timeOut: logType === "OUT" ? now : dtr?.timeOut
         },
         create: {
-            employeeId: id,
+            employeeId: employee.id,
             workDate: logDate,
             timeIn: logType === "IN" ? now : undefined,
             timeOut: logType === "OUT" ? now : undefined,
             status: "PENDING",
-            siteId: employee.siteId,
-        },
+            siteId: employee.siteId
+        }
     });
 
     const [leave, ob, restDay, holiday] = await Promise.all([
         prisma.leaveRequest.findFirst({
             where: {
-                employeeId: id,
+                employeeId: employee.id,
                 status: "APPROVED",
                 fromDate: { lte: logDate },
-                toDate: { gte: logDate },
-            },
+                toDate: { gte: logDate }
+            }
         }),
         prisma.officialBusiness.findFirst({
             where: {
-                employeeId: id,
+                employeeId: employee.id,
                 status: "APPROVED",
-                workDate: logDate,
-            },
+                workDate: logDate
+            }
         }),
         prisma.restDay.findFirst({
-            where: { employeeId: id, dayOfWeek: new Date(logDate).getDay() },
+            where: {
+                employeeId: employee.id,
+                restDate: new Date(logDate)
+            }
         }),
         prisma.holidayType.findFirst({
-            where: { holidayDate: new Date(logDate), deletedAt: null },
-        }),
+            where: {
+                holidayDate: new Date(logDate),
+                deletedAt: null
+            }
+        })
     ]);
 
-    if (leave) {
-        await prisma.dTR.update({
-            where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
-            data: { status: "LEAVE", timeIn: null, timeOut: null, lateMinutes: 0, undertimeMinutes: 0, overtimeMinutes: 0 },
-        });
-        return {
-            ...timeLog,
-            selfie: timeLog.selfie
-                ? `data:image/jpeg;base64,${timeLog.selfie}`
-                : null,
-        };
-    }
+    let status = "PRESENT";
 
-    if (ob) {
-        await prisma.dTR.update({
-            where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
-            data: { status: "OB", lateMinutes: 0, undertimeMinutes: 0 },
-        });
-        return {
-            ...timeLog,
-            selfie: timeLog.selfie
-                ? `data:image/jpeg;base64,${timeLog.selfie}`
-                : null,
-        };
-    }
+    if (leave) status = "LEAVE";
+    else if (ob) status = "OB";
+    else if (restDay) status = "RESTDAY";
+    else if (holiday) status = "HOLIDAY";
 
-    if (restDay) {
-        await prisma.dTR.update({
-            where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
-            data: { status: "RESTDAY", lateMinutes: 0, undertimeMinutes: 0 },
-        });
-        return {
-            ...timeLog,
-            selfie: timeLog.selfie
-                ? `data:image/jpeg;base64,${timeLog.selfie}`
-                : null,
-        };
-    }
+    if (logType === "OUT" && shift.startTime && shift.endTime) {
 
-    if (holiday) {
-        await prisma.dTR.update({
-            where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
-            data: { status: "HOLIDAY", lateMinutes: 0, undertimeMinutes: 0 },
-        });
-        return {
-            ...timeLog,
-            selfie: timeLog.selfie
-                ? `data:image/jpeg;base64,${timeLog.selfie}`
-                : null,
-        };
-    }
-
-    if (shift.startTime && shift.endTime && logType === "OUT") {
         const shiftStart = new Date(`${logDate}T${shift.startTime}:00`);
         let shiftEnd = new Date(`${logDate}T${shift.endTime}:00`);
+
         if (shiftEnd < shiftStart) shiftEnd.setDate(shiftEnd.getDate() + 1);
 
-        const timeIn = dtr.timeIn || shiftStart;
-        const timeOut = dtr.timeOut || shiftEnd;
+        const timeIn = dtr.timeIn ?? shiftStart;
+        const timeOut = dtr.timeOut ?? shiftEnd;
 
-        const lateMinutes = Math.max(0, Math.floor((timeIn.getTime() - shiftStart.getTime()) / 60000) - shift.graceMinutes);
-        const undertimeMinutes = Math.max(0, Math.floor((shiftEnd.getTime() - timeOut.getTime()) / 60000));
-        const overtimeMinutes = Math.max(0, Math.floor((timeOut.getTime() - shiftEnd.getTime()) / 60000));
+        const lateMinutes = Math.max(
+            0,
+            Math.floor((timeIn.getTime() - shiftStart.getTime()) / 60000) -
+            shift.graceMinutes
+        );
+
+        const undertimeMinutes = Math.max(
+            0,
+            Math.floor((shiftEnd.getTime() - timeOut.getTime()) / 60000)
+        );
+
+        const overtimeMinutes = Math.max(
+            0,
+            Math.floor((timeOut.getTime() - shiftEnd.getTime()) / 60000)
+        );
 
         await prisma.dTR.update({
-            where: { employeeId_workDate: { employeeId: id, workDate: logDate } },
-            data: { lateMinutes, undertimeMinutes, overtimeMinutes, status: "PRESENT" },
+            where: {
+                employeeId_workDate: {
+                    employeeId: employee.id,
+                    workDate: logDate
+                }
+            },
+            data: {
+                lateMinutes,
+                undertimeMinutes,
+                overtimeMinutes,
+                status
+            }
         });
     }
 
     return {
         ...timeLog,
-        selfie: timeLog.selfie
-            ? `data:image/jpeg;base64,${timeLog.selfie}`
-            : null,
+        selfie: `data:image/jpeg;base64,${base64Image}`
     };
 }
 

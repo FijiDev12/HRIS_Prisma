@@ -9,9 +9,41 @@ interface ShiftSchedType {
 }
 
 export async function createShiftService(data: ShiftSchedType) {
-    const result = await prisma.shift.create({ data });
+    const { shiftName, startTime, endTime, flexStart, flexEnd } = data;
 
-    return result;
+    const existing = await prisma.shift.findFirst({
+        where: { shiftName }
+    });
+
+    if (existing) {
+        throw new Error("Shift name already exists.");
+    }
+
+    if (!startTime && !flexStart) {
+        throw new Error("Shift must have either fixed time or flex time.");
+    }
+
+    if (startTime && endTime) {
+        const start = new Date(`1900-01-01T${startTime}`);
+        const end = new Date(`1900-01-01T${endTime}`);
+
+        if (start.getTime() === end.getTime()) {
+            throw new Error("Start time and end time cannot be the same.");
+        }
+    }
+
+    if (flexStart && flexEnd) {
+        const fStart = new Date(`1900-01-01T${flexStart}`);
+        const fEnd = new Date(`1900-01-01T${flexEnd}`);
+
+        if (fStart >= fEnd) {
+            throw new Error("Flex start must be earlier than flex end.");
+        }
+    }
+
+    return prisma.shift.create({
+        data
+    });
 }
 
 export async function getShiftService() {

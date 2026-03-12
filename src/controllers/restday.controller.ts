@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import { 
-    createRestDayService, 
-    deleteRestDayService, 
-    getRestDayByIdService, 
-    getRestDayService, 
-    updateRestDayService 
+import {
+    createRestDayService,
+    deleteRestDayService,
+    getRestDayByEmpIdService,
+    getRestDayService,
+    updateRestDayService
 } from "../services/restday.services";
 
-export const getRestdayController = async (_:Request, res: Response) => {
+export const getRestdayController = async (_: Request, res: Response) => {
     try {
         const result = await getRestDayService();
         res.status(200).json({
@@ -25,15 +25,15 @@ export const getRestdayController = async (_:Request, res: Response) => {
 
 export const getRestdayByIdController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
         });
     }
-    
+
     try {
-        const result = await getRestDayByIdService(Number(id));
+        const result = await getRestDayByEmpIdService(Number(id));
         res.status(200).json({
             code: 200,
             message: 'Success',
@@ -48,8 +48,8 @@ export const getRestdayByIdController = async (req: Request, res: Response) => {
 }
 
 export const createRestdayController = async (req: Request, res: Response) => {
-    const { employeeId, dayOfWeek } = await req.body;
-    if(!employeeId || !dayOfWeek) {
+    const { employeeId, restDate } = await req.body;
+    if (!employeeId || !restDate) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -73,15 +73,15 @@ export const createRestdayController = async (req: Request, res: Response) => {
 
 export const updateRestdayController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
         });
     }
 
-    const { employeeId, dayOfWeek } = await req.body;
-    if(!employeeId || !dayOfWeek) {
+    const { restDate } = await req.body;
+    if (!restDate) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'
@@ -105,7 +105,7 @@ export const updateRestdayController = async (req: Request, res: Response) => {
 
 export const deleteRestdayController = async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if(!id || isNaN(id)) {
+    if (!id || isNaN(id)) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'

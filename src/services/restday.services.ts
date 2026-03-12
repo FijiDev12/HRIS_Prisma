@@ -2,45 +2,65 @@ import { prisma } from "../util/prisma.util";
 
 interface RestDayType {
     employeeId: number;
-    dayOfWeek: number;
+    restDate: Date;
 }
 
 export async function createRestDayService(data: RestDayType) {
-    const result = await prisma.restDay.create({ data });
-
-    return result;
+    return prisma.restDay.create({
+        data
+    });
 }
 
 export async function getRestDayService() {
-    const result = await prisma.restDay.findMany({
-        where: { deletedAt: null }
+    return prisma.restDay.findMany({
+        where: {
+            deletedAt: null
+        },
+        include: {
+            employee: {
+                select: {
+                    employeeNo: true,
+                    firstName: true,
+                    lastName: true,
+                }
+            }
+        }
     });
-
-    return result;
 }
 
-export async function getRestDayByIdService(id: number) {
-    const result = await prisma.restDay.findUnique({
-        where: { id, deletedAt: null }
+export async function getRestDayByEmpIdService(employeeId: number) {
+    return prisma.restDay.findMany({
+        where: {
+            employeeId,
+            deletedAt: null
+        },
+        include: {
+            employee: {
+                select: {
+                    employeeNo: true,
+                    firstName: true,
+                    lastName: true,
+                }
+            }
+        }
     });
-
-    return result;
 }
 
-export async function updateRestDayService(id: number, data: Partial<RestDayType>) {
-    const result = await prisma.restDay.update({
+export async function updateRestDayService(
+    id: number,
+    data: Partial<RestDayType>
+) {
+    return prisma.restDay.update({
         where: { id },
         data
     });
-
-    return result;
 }
 
 export async function deleteRestDayService(id: number) {
-    const result = await prisma.restDay.update({
+    return prisma.restDay.update({
         where: { id },
-        data: { deletedAt: new Date() }
+        data: {
+            deletedAt: new Date()
+        }
     });
-
-    return result;
 }
