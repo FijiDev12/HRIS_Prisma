@@ -495,7 +495,7 @@ export async function bulkUploadEmployeeService(fileBuffer: Buffer) {
                     .replace(/\s+/g, "")
                     .toLowerCase();
 
-                const last4Contact = row.contactNo.slice(-4);
+                const last4Contact = String(row.contactNo).slice(-4);
 
                 const user = await tx.user.create({
                     data: {
