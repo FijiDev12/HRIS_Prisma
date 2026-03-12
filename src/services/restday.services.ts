@@ -7,7 +7,10 @@ interface RestDayType {
 
 export async function createRestDayService(data: RestDayType) {
     return prisma.restDay.create({
-        data
+        data: {
+            employeeId: data.employeeId,
+            restDate: new Date(data.restDate)
+        }
     });
 }
 
@@ -52,7 +55,10 @@ export async function updateRestDayService(
 ) {
     return prisma.restDay.update({
         where: { id },
-        data
+        data: {
+            employeeId: data.employeeId,
+            restDate: data.restDate
+        }
     });
 }
 
