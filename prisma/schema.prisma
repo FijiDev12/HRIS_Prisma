@@ -170,38 +170,80 @@ model EmploymentType {
   employees Employee[]
 }
 
-model Shift {
-  id              Int       @id @default(autoincrement())
-  shiftName       String    @unique
-  startTime       String?
-  endTime         String?
-  flexStart       String?
-  flexEnd         String?
-  requiredMinutes Int       @default(480)
-  breakMinutes    Int       @default(60)
-  graceMinutes    Int       @default(10)
-  isFlexible      Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime?
+// model Shift {
+//   id              Int       @id @default(autoincrement())
+//   shiftName       String    @unique
+//   startTime       String?
+//   endTime         String?
+//   flexStart       String?
+//   flexEnd         String?
+//   requiredMinutes Int       @default(480)
+//   breakMinutes    Int       @default(60)
+//   graceMinutes    Int       @default(10)
+//   isFlexible      Boolean   @default(false)
+//   createdAt       DateTime  @default(now())
+//   updatedAt       DateTime  @updatedAt
+//   deletedAt       DateTime?
 
+//   employees             EmployeeShift[]
+//   attendanceCorrections AttendanceCorrection[]
+//   breakTimes            BreakTime[]
+// }
+
+model Shift {
+  id        Int    @id @default(autoincrement())
+  shiftName String @unique
+
+  startTime DateTime?
+  endTime   DateTime?
+  flexStart DateTime?
+  flexEnd   DateTime?
+
+  graceMinutes Int     @default(10)
+  isFlexible   Boolean @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  breaks                BreakTime[]
   employees             EmployeeShift[]
   attendanceCorrections AttendanceCorrection[]
+
+  @@index([deletedAt])
 }
 
+// model EmployeeShift {
+//   id         Int       @id @default(autoincrement())
+//   employeeId Int
+//   shiftId    Int
+//   workDate   DateTime
+//   createdAt  DateTime  @default(now())
+//   updatedAt  DateTime  @updatedAt
+//   deletedAt  DateTime?
+
+//   // employee Employee @relation(fields: [employeeId], references: [id])
+//   shift Shift @relation(fields: [shiftId], references: [id])
+
+//   @@unique([employeeId, workDate])
+// }
+
 model EmployeeShift {
-  id         Int       @id @default(autoincrement())
+  id         Int @id @default(autoincrement())
   employeeId Int
   shiftId    Int
-  workDate   DateTime
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  deletedAt  DateTime?
 
-  // employee Employee @relation(fields: [employeeId], references: [id])
+  workDate DateTime
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
   shift Shift @relation(fields: [shiftId], references: [id])
 
   @@unique([employeeId, workDate])
+  @@index([shiftId])
+  @@index([deletedAt])
 }
 
 enum LogType {
@@ -525,4 +567,24 @@ model PayrollAudit {
   action          String
   performedBy     Int
   createdAt       DateTime @default(now())
+}
+
+model BreakTime {
+  id      Int @id @default(autoincrement())
+  shiftId Int
+
+  startTime  DateTime?
+  endTime    DateTime?
+  duration   Int?
+  isPaid     Boolean   @default(false)
+  isFlexible Boolean   @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  shift Shift @relation(fields: [shiftId], references: [id])
+
+  @@index([shiftId])
+  @@index([deletedAt])
 }
