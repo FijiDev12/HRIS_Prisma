@@ -10,6 +10,19 @@ interface BreakTimeType {
 }
 
 export async function createBreakTimeService(data: BreakTimeType) {
+    const exist = await prisma.breakTime.findFirst({
+        where: {
+            shiftId: data.shiftId,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            deletedAt: null
+        }
+    });
+
+    if (exist) {
+        throw new Error("Break time already exists");
+    }
+
     const result = await prisma.breakTime.create({ data });
 
     return result;

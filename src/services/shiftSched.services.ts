@@ -48,7 +48,8 @@ export async function createShiftService(data: ShiftSchedType) {
 
 export async function getShiftService() {
     const result = await prisma.shift.findMany({
-        where: { deletedAt: null }
+        where: { deletedAt: null },
+        include: { breaks: { where: { deletedAt: null } } }
     });
 
     return result;
@@ -56,7 +57,8 @@ export async function getShiftService() {
 
 export async function getShiftByIdService(id: number) {
     const result = await prisma.shift.findUnique({
-        where: { id, deletedAt: null }
+        where: { id, deletedAt: null },
+        include: { breaks: { where: { deletedAt: null } } }
     });
 
     return result;

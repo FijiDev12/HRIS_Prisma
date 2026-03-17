@@ -42,8 +42,9 @@ export const getBreakTimeByIdController = async (req: Request, res: Response) =>
 }
 
 export const createBreakTimeController = async (req: Request, res: Response) => {
-    const { shiftId, startTime, endTime, duration, isPaid, isFlexible } = await req.body;
-    if (!shiftId || !startTime || !endTime || !duration || !isPaid || !isFlexible) {
+    const { shiftId, startTime, endTime } = await req.body;
+
+    if (!shiftId || !startTime || !endTime) {
         return res.status(400).json({
             code: 400,
             message: 'Bad Request'

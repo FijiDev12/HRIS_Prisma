@@ -229,24 +229,57 @@ export async function assignShiftToEmployee(data: any) {
     const start = new Date(data.startDate);
     const end = new Date(data.endDate);
 
-    if (start > end) {
-        throw new Error('Start date must be before or equal to end date');
-    }
+    if (start > end) throw new Error("Start date must be before or equal to end date");
 
+    const employeeExists = await prisma.employee.findUnique({
+        where: { id: data.employeeId },
+    });
+    if (!employeeExists) throw new Error("Employee does not exist");
+
+    const restDays = data.restDays ?? [0, 6];
     const schedules = [];
+    const restDayRecords: { employeeId: number; restDate: Date }[] = [];
+
     for (let d = start; d <= end; d = addDays(d, 1)) {
+        const day = d.getDay();
+
+        if (restDays.includes(day)) {
+            restDayRecords.push({
+                employeeId: data.employeeId,
+                restDate: new Date(d),
+            });
+            continue;
+        }
+
         schedules.push({
             employeeId: data.employeeId,
             shiftId: data.shiftId,
-            workDate: new Date(d)
+            workDate: new Date(d),
         });
     }
+
     const result = await prisma.employeeShift.createMany({
         data: schedules,
-        skipDuplicates: true
+        skipDuplicates: true,
     });
 
-    return result;
+    for (const r of restDayRecords) {
+        await prisma.restDay.upsert({
+            where: {
+                employeeId_restDate: {
+                    employeeId: r.employeeId,
+                    restDate: r.restDate,
+                },
+            },
+            update: {},
+            create: r,
+        });
+    }
+
+    return {
+        shiftsCreated: result.count,
+        restDaysCreated: restDayRecords.length,
+    };
 }
 
 export async function getEmployeeShifts() {
@@ -261,7 +294,7 @@ export async function getEmployeeShifts() {
 export async function getEmployeeShiftByEmpId(id: number) {
     const result = await prisma.employeeShift.findMany({
         where: { employeeId: id },
-        include: { shift: true }
+        include: { shift: { include: { breaks: true } } }
     });
 
     return result;

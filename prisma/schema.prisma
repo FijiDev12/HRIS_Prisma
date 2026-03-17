@@ -194,10 +194,10 @@ model Shift {
   id        Int    @id @default(autoincrement())
   shiftName String @unique
 
-  startTime DateTime?
-  endTime   DateTime?
-  flexStart DateTime?
-  flexEnd   DateTime?
+  startTime String?
+  endTime   String?
+  flexStart String?
+  flexEnd   String?
 
   graceMinutes Int     @default(10)
   isFlexible   Boolean @default(false)
@@ -573,11 +573,11 @@ model BreakTime {
   id      Int @id @default(autoincrement())
   shiftId Int
 
-  startTime  DateTime?
-  endTime    DateTime?
+  startTime  String?
+  endTime    String?
   duration   Int?
-  isPaid     Boolean   @default(false)
-  isFlexible Boolean   @default(false)
+  isPaid     Boolean @default(false)
+  isFlexible Boolean @default(false)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -585,6 +585,5 @@ model BreakTime {
 
   shift Shift @relation(fields: [shiftId], references: [id])
 
-  @@index([shiftId])
-  @@index([deletedAt])
+  @@index([shiftId, startTime, endTime])
 }

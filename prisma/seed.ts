@@ -104,14 +104,36 @@ async function main() {
             shiftName: "Regular 8-5",
             startTime: "08:00",
             endTime: "17:00",
-            requiredMinutes: 480,
-            breakMinutes: 60,
             graceMinutes: 10,
         },
     });
 
-    await prisma.employeeShift.create({
+    await prisma.breakTime.create({
         data: {
+            shiftId: shift.id,
+            startTime: "12:00",
+            endTime: "13:00",
+            isFlexible: false
+        },
+    });
+
+    // await prisma.employeeShift.create({
+    //     data: {
+    //         employeeId: employee.id,
+    //         shiftId: shift.id,
+    //         workDate: new Date("2026-03-01"),
+    //     },
+    // });
+
+    await prisma.employeeShift.upsert({
+        where: {
+            employeeId_workDate: {
+                employeeId: employee.id,
+                workDate: new Date("2026-03-01"),
+            },
+        },
+        update: {},
+        create: {
             employeeId: employee.id,
             shiftId: shift.id,
             workDate: new Date("2026-03-01"),
